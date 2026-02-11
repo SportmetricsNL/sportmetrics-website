@@ -656,7 +656,7 @@ HTML_PAGE = r"""
         <li>Zone 2 rond VT1 bouwt de basis zodat hoge blokken beter te herhalen zijn.</li>
         <li>Met ademgasanalyse plaats je VO2max en VT1/VT2 precies, in plaats van generieke formules.</li>
       </ul>
-      <p class="footer">We zien je graag bij SportMetrics.</p>
+      <p class="footer">We zien je snel bij SportMetrics.</p>
     </section>
   </main>
 
