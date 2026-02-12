@@ -25,6 +25,15 @@ NAV_ITEMS = [
 ]
 
 
+def _is_mobile_client() -> bool:
+    try:
+        ua = st.context.headers.get("User-Agent", "")
+    except Exception:
+        return False
+    ua_lower = ua.lower()
+    return any(token in ua_lower for token in ("mobile", "android", "iphone", "ipad"))
+
+
 def inject_global_css() -> None:
     st.markdown(
         """
@@ -137,6 +146,10 @@ def inject_global_css() -> None:
             padding-top: 0.1rem;
           }
 
+          .sm-mobile-menu {
+            margin-top: 0.2rem;
+          }
+
           @media (max-width: 1180px) {
             .block-container {
               max-width: 100%;
@@ -200,15 +213,25 @@ def top_nav(active: str) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
     with nav_col:
-        row_size = 5
-        for row_start in range(0, len(NAV_ITEMS), row_size):
-            row_items = NAV_ITEMS[row_start : row_start + row_size]
-            weights = [1.15 if label == "Mijn SportTesting AI" else 1.0 for label, _ in row_items]
-            columns = st.columns(weights, gap="small")
-            for col, (label, page) in zip(columns, row_items):
-                with col:
-                    st.page_link(page=page, label=label, disabled=(label == active), width="stretch")
-            if row_start + row_size < len(NAV_ITEMS):
-                st.markdown('<div class="sm-nav-row-space"></div>', unsafe_allow_html=True)
+        if _is_mobile_client():
+            labels = [label for label, _ in NAV_ITEMS]
+            current_index = labels.index(active) if active in labels else 0
+            st.markdown('<div class="sm-mobile-menu">', unsafe_allow_html=True)
+            selected = st.selectbox("Menu", labels, index=current_index, label_visibility="collapsed")
+            st.markdown("</div>", unsafe_allow_html=True)
+            if selected != active:
+                page_map = {label: page for label, page in NAV_ITEMS}
+                st.switch_page(page_map[selected])
+        else:
+            row_size = 5
+            for row_start in range(0, len(NAV_ITEMS), row_size):
+                row_items = NAV_ITEMS[row_start : row_start + row_size]
+                weights = [1.15 if label == "Mijn SportTesting AI" else 1.0 for label, _ in row_items]
+                columns = st.columns(weights, gap="small")
+                for col, (label, page) in zip(columns, row_items):
+                    with col:
+                        st.page_link(page=page, label=label, disabled=(label == active), width="stretch")
+                if row_start + row_size < len(NAV_ITEMS):
+                    st.markdown('<div class="sm-nav-row-space"></div>', unsafe_allow_html=True)
 
     st.markdown('<div class="sm-nav-space"></div>', unsafe_allow_html=True)

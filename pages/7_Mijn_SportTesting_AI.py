@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import importlib.util
 from pathlib import Path
@@ -51,7 +52,11 @@ st.markdown(
       }
 
       div[data-testid="stFileUploader"] {
-        margin-top: 0.35rem;
+        margin-top: 0.4rem;
+        padding: 0.75rem;
+        border: 1px solid #d6e1e4;
+        border-radius: 0.9rem;
+        background: #ffffff;
       }
 
       div[data-testid="stFileUploaderDropzone"] {
@@ -157,6 +162,7 @@ BELANGRIJKE REGELS:
 3. Wees praktisch, enthousiast en gebruik bulletpoints.
 4. Geen medisch advies.
 5. Geef altijd een props aan de persoon voor de test en bedank dat hij of zij dat bij SportMetrics heeft gedaan.
+6. Noem NOOIT expliciet de bronnaam "Reader trainingsleer 2024-2025" (of varianten daarop). Gebruik wel de inhoud, maar verwijs alleen algemeen naar trainingsliteratuur.
 """
 
 if api_ready:
@@ -177,31 +183,44 @@ if "messages" not in st.session_state:
     )
     st.session_state.messages.append({"role": "assistant", "content": intro})
 
-with st.expander("Klik hier om je PDF-rapport te uploaden", expanded=False):
-    st.caption("Na upload wordt de inhoud automatisch meegenomen in je eerstvolgende vraag.")
-    st.markdown("**Upload je testresultaat (PDF)**")
-    uploaded_file = st.file_uploader(
-        "Upload je testresultaat (PDF)",
-        type="pdf",
-        key="mobile_uploader",
-        label_visibility="collapsed",
-    )
+st.caption("Upload je PDF-rapport. Na upload wordt de inhoud automatisch meegenomen in je eerstvolgende vraag.")
+uploaded_file = st.file_uploader(
+    "Upload je testresultaat (PDF)",
+    type="pdf",
+    key="mobile_uploader",
+    label_visibility="visible",
+)
 
-    if uploaded_file is not None:
-        try:
-            reader = pypdf.PdfReader(uploaded_file)
-            client_pdf_text = ""
-            for page in reader.pages:
-                extracted = page.extract_text() or ""
-                client_pdf_text += extracted + "\n"
+if uploaded_file is not None:
+    try:
+        reader = pypdf.PdfReader(uploaded_file)
+        client_pdf_text = ""
+        for page in reader.pages:
+            extracted = page.extract_text() or ""
+            client_pdf_text += extracted + "\n"
 
-            st.session_state["last_uploaded_text"] = client_pdf_text
-            st.success("Rapport ontvangen. Typ hieronder je vraag.")
-        except Exception as e:
-            st.error(f"Fout bij lezen rapport: {e}")
+        st.session_state["last_uploaded_text"] = client_pdf_text
+        st.success("Rapport ontvangen. Typ hieronder je vraag.")
+    except Exception as e:
+        st.error(f"Fout bij lezen rapport: {e}")
+
+
+def sanitize_response(text: str) -> str:
+    replacements = [
+        (r"reader\s*trainingsleer\s*2024[-–/]?2025(?:-compressed)?", "de beschikbare trainingsliteratuur"),
+        (r"trainingsleer\s*reader", "de beschikbare trainingsliteratuur"),
+    ]
+    cleaned = text
+    for pattern, repl in replacements:
+        cleaned = re.sub(pattern, repl, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def avatar_for(role: str) -> str:
+    return "🤖" if role == "assistant" else "🙂"
 
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
+    with st.chat_message(message["role"], avatar=avatar_for(message["role"])):
         st.markdown(message["content"])
 
 prompt = st.chat_input(
@@ -225,11 +244,11 @@ if prompt:
     full_prompt_for_ai = prompt + extra_context
 
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar=avatar_for("user")):
         st.markdown(prompt)
 
     try:
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar=avatar_for("assistant")):
             loading_placeholder = st.empty()
             loading_placeholder.markdown(
                 """
@@ -251,7 +270,8 @@ if prompt:
             response = model.generate_content(full_prompt_for_ai)
             loading_placeholder.empty()
 
-            final_text = response.text + "\n\n---\n*Disclaimer: Dit is geen medisch advies.*"
+            model_text = sanitize_response(response.text or "")
+            final_text = model_text + "\n\n---\n*Disclaimer: Dit is geen medisch advies.*"
             st.markdown(final_text)
             st.session_state.messages.append({"role": "assistant", "content": final_text})
 

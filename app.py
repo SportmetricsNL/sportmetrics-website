@@ -339,7 +339,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.page_link("pages/1_VO2max.py", label="Start met VO2max", width="stretch")
+st.page_link("pages/4_Energiesystemen.py", label="Begin je kernbegrippen bij Energiesystemen", width="stretch")
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)
 st.markdown('<section class="home-section"><h2>Locaties</h2></section>', unsafe_allow_html=True)
