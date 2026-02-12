@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import base64
+import mimetypes
+from pathlib import Path
+
 import streamlit as st
 
 
 NAV_ITEMS = [
     ("Home", "app.py"),
+    ("Aanbod", "pages/8_Aanbod.py"),
+    ("Methode", "pages/9_Methode.py"),
     ("VO2max", "pages/1_VO2max.py"),
     ("VT1", "pages/2_VT1.py"),
     ("VT2", "pages/3_VT2.py"),
@@ -76,16 +82,23 @@ def inject_global_css() -> None:
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 2.65rem;
+            min-height: 2.3rem;
             width: 100%;
             border-radius: 999px;
             border: 1px solid var(--sm-border);
-            background: var(--sm-surface);
+            background: rgba(255, 255, 255, 0.9);
             color: var(--sm-muted);
             text-decoration: none;
             font-weight: 600;
             letter-spacing: 0.01em;
-            box-shadow: 0 4px 14px rgba(24, 56, 70, 0.06);
+            font-size: 0.76rem;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            text-align: center;
+            line-height: 1.18;
+            padding: 0.18rem 0.48rem;
+            box-shadow: 0 3px 9px rgba(24, 56, 70, 0.05);
             transition: all 0.2s ease;
           }
 
@@ -106,7 +119,18 @@ def inject_global_css() -> None:
           }
 
           .sm-nav-space {
-            height: 0.6rem;
+            height: 0.32rem;
+          }
+
+          .sm-nav-row-space {
+            height: 0.3rem;
+          }
+
+          .sm-logo-wrap {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding-top: 0.1rem;
           }
 
           @media (max-width: 1180px) {
@@ -115,16 +139,34 @@ def inject_global_css() -> None:
             }
 
             div[data-testid="stPageLink"] a {
-              min-height: 2.45rem;
-              font-size: 0.9rem;
+              min-height: 2.2rem;
+              font-size: 0.73rem;
             }
           }
 
           @media (max-width: 900px) {
             div[data-testid="stPageLink"] a {
-              min-height: 2.3rem;
-              font-size: 0.8rem;
-              padding: 0 0.45rem;
+              min-height: 2.1rem;
+              font-size: 0.68rem;
+              padding: 0.16rem 0.34rem;
+            }
+
+            .sm-nav-row-space {
+              height: 0.22rem;
+            }
+          }
+
+          @media (max-width: 600px) {
+            .block-container {
+              padding-left: 0.72rem;
+              padding-right: 0.72rem;
+              padding-bottom: 2rem;
+            }
+
+            div[data-testid="stPageLink"] a {
+              min-height: 2.18rem;
+              font-size: 0.7rem;
+              padding: 0.18rem 0.36rem;
             }
           }
         </style>
@@ -134,8 +176,35 @@ def inject_global_css() -> None:
 
 
 def top_nav(active: str) -> None:
-    columns = st.columns(len(NAV_ITEMS), gap="small")
-    for col, (label, page) in zip(columns, NAV_ITEMS):
-        with col:
-            st.page_link(page=page, label=label, disabled=(label == active))
+    logo_path = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
+    logo_uri = ""
+    if logo_path.exists():
+        mime_type, _ = mimetypes.guess_type(logo_path.name)
+        if mime_type is None:
+            mime_type = "image/png"
+        payload = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
+        logo_uri = f"data:{mime_type};base64,{payload}"
+    logo_col, nav_col = st.columns([0.14, 0.86], gap="small")
+
+    with logo_col:
+        st.markdown('<div class="sm-logo-wrap">', unsafe_allow_html=True)
+        if logo_uri:
+            st.markdown(
+                f'<img src="{logo_uri}" alt="SportMetrics logo" style="width: 112px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />',
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with nav_col:
+        row_size = 5
+        for row_start in range(0, len(NAV_ITEMS), row_size):
+            row_items = NAV_ITEMS[row_start : row_start + row_size]
+            weights = [1.15 if label == "Mijn SportTesting AI" else 1.0 for label, _ in row_items]
+            columns = st.columns(weights, gap="small")
+            for col, (label, page) in zip(columns, row_items):
+                with col:
+                    st.page_link(page=page, label=label, disabled=(label == active), width="stretch")
+            if row_start + row_size < len(NAV_ITEMS):
+                st.markdown('<div class="sm-nav-row-space"></div>', unsafe_allow_html=True)
+
     st.markdown('<div class="sm-nav-space"></div>', unsafe_allow_html=True)

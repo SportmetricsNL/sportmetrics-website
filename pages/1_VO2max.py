@@ -26,9 +26,8 @@ inject_global_css()
 top_nav(active="VO2max")
 
 BASE_DIR = Path(__file__).parent
-LOGO_PATH = BASE_DIR / "logo.png"
-if not LOGO_PATH.exists():
-    LOGO_PATH = BASE_DIR / "1.png"
+ROOT_DIR = BASE_DIR.parent
+LOGO_PATH = ROOT_DIR / "assets" / "logo.png"
 
 logo_data_uri = ""
 if LOGO_PATH.exists():
@@ -58,18 +57,18 @@ HTML_PAGE = r"""
     @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spectral:wght@400;600&display=swap");
 
     :root {
-      --sand: #f6f1ea;
-      --clay: #e9ddd2;
-      --ink: #1e2a2f;
-      --muted: #5c6b73;
-      --sea: #2f7c85;
-      --deep: #0f4c5c;
-      --sun: #f4b66a;
-      --peach: #f1c9a9;
-      --card: #fffdf6;
+      --sand: #edf4f6;
+      --clay: #dce8eb;
+      --ink: #1d363d;
+      --muted: #58717a;
+      --sea: #3a8791;
+      --deep: #2b6c76;
+      --sun: #8fbcc5;
+      --peach: #c9dfe4;
+      --card: #f7fbfc;
       --card-strong: #ffffff;
-      --border: rgba(30, 42, 47, 0.12);
-      --shadow: 0 18px 50px rgba(15, 76, 92, 0.18);
+      --border: rgba(40, 78, 87, 0.14);
+      --shadow: 0 14px 34px rgba(19, 61, 73, 0.11);
     }
 
     * { box-sizing: border-box; }
@@ -104,13 +103,13 @@ HTML_PAGE = r"""
       z-index: -1;
     }
     .bg-shape.one { top: -120px; right: -120px; }
-    .bg-shape.two { bottom: -200px; left: -140px; background: radial-gradient(circle, rgba(244, 182, 106, 0.35), rgba(244, 182, 106, 0.02)); }
+    .bg-shape.two { bottom: -200px; left: -140px; background: radial-gradient(circle, rgba(143, 188, 197, 0.32), rgba(143, 188, 197, 0.04)); }
 
     nav {
+      display: none;
       position: fixed;
       top: 28px;
       right: 26px;
-      display: flex;
       flex-direction: column;
       gap: 10px;
       background: var(--card-strong);
@@ -162,18 +161,18 @@ HTML_PAGE = r"""
     main {
       position: relative;
       z-index: 3;
-      max-width: 1100px;
+      max-width: 1180px;
       margin: 0 auto;
       padding: 64px 24px 120px;
     }
 
     section {
-      margin: 0 0 72px;
+      margin: 0 0 64px;
       padding: 36px;
       border-radius: 26px;
-      background: var(--card);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.93), rgba(242, 249, 250, 0.86));
       box-shadow: var(--shadow);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(56, 101, 112, 0.18);
       transition: all 0.7s ease;
     }
     body.enable-animations section { opacity: 0; transform: translateY(20px); }
@@ -181,7 +180,7 @@ HTML_PAGE = r"""
 
     .hero {
       padding: 54px 44px;
-      background: linear-gradient(140deg, #ffffff, #f6e7d6);
+      background: linear-gradient(140deg, #ffffff, #e6f0f3);
     }
     .hero h1 {
       font-family: "Space Grotesk", sans-serif;
@@ -289,8 +288,8 @@ HTML_PAGE = r"""
     .mix-value { text-align: right; color: var(--muted); }
 
     .callout {
-      background: #f3e4d2;
-      border: 1px solid #e8cfae;
+      background: #e8f1f4;
+      border: 1px solid #bfd5db;
       padding: 16px 18px;
       border-radius: 18px;
       font-family: "Space Grotesk", sans-serif;
@@ -396,9 +395,9 @@ HTML_PAGE = r"""
       border-color: var(--deep);
     }
     .interval-rest {
-      background: #f3e4d2;
+      background: #e8f1f4;
       color: var(--ink);
-      border-color: #e8cfae;
+      border-color: #bfd5db;
     }
 
     .quote-image {

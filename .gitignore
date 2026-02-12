@@ -1,1 +1,12 @@
 .DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+.pycache/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# macOS
+.DS_Store
