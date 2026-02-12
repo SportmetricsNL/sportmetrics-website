@@ -7,6 +7,10 @@ from pathlib import Path
 import streamlit as st
 
 
+@st.cache_data(show_spinner=False)
+def file_b64(path: str) -> str:
+    return base64.b64encode(Path(path).read_bytes()).decode("utf-8")
+
 NAV_ITEMS = [
     ("Home", "app.py"),
     ("Aanbod", "pages/8_Aanbod.py"),
