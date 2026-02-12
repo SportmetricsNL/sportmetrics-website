@@ -27,6 +27,7 @@ inject_global_css()
 top_nav(active="Home")
 
 
+@st.cache_data(show_spinner=False)
 def file_to_data_uri(path: Path) -> str:
     mime_type, _ = mimetypes.guess_type(path.name)
     if mime_type is None:
@@ -36,14 +37,17 @@ def file_to_data_uri(path: Path) -> str:
 
 
 HERO_CANDIDATES = [
+    Path("assets/hero-web.jpg"),
     Path("assets/hero-hd.jpg"),
     Path("assets/hero_hd.jpg"),
-    Path("assets/hero-high.jpg"),
     Path("assets/hero.jpg"),
+    Path("assets/hero-high.jpg"),
 ]
 
 hero_path = next((p for p in HERO_CANDIDATES if p.exists()), Path("assets/hero.jpg"))
-logo_path = Path("assets/logo.png")
+logo_path = Path("assets/logo-web.png")
+if not logo_path.exists():
+    logo_path = Path("assets/logo.png")
 
 hero_uri = file_to_data_uri(hero_path)
 logo_uri = file_to_data_uri(logo_path)
@@ -84,7 +88,6 @@ st.markdown(
         border-radius: 1.2rem;
         padding: clamp(1.1rem, 2vw, 1.6rem);
         box-shadow: 0 20px 36px rgba(13, 47, 57, 0.16);
-        backdrop-filter: blur(3px);
       }}
 
       .home-brand {{
@@ -149,11 +152,6 @@ st.markdown(
       .home-cta:focus {{
         color: #ffffff;
         text-decoration: none !important;
-      }}
-
-      .home-cta-alt {{
-        margin-top: 0.55rem;
-        background: linear-gradient(140deg, #2b5f67 0%, #347983 100%);
       }}
 
       .home-content {{
@@ -235,11 +233,21 @@ st.markdown(
       }}
 
       .home-map {{
-        width: 100%;
-        height: 190px;
-        border: 0;
-        border-radius: 0.7rem;
         margin-top: 0.8rem;
+      }}
+
+      .home-map-link {{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.52rem 0.88rem;
+        border-radius: 999px;
+        background: #eef6f8;
+        border: 1px solid #cfe0e5;
+        color: #275d67 !important;
+        text-decoration: none !important;
+        font-weight: 700;
+        font-size: 0.84rem;
       }}
 
       .home-footer {{
@@ -282,13 +290,13 @@ st.markdown(
           <p class="home-copy">Maak dit fietsjaar jouw jaar met jouw data!</p>
           <p class="home-copy">Wetenschappelijk onderbouwd, persoonlijk en professioneel uitgevoerd.</p>
           <a class="home-cta" href="{CTA_URL}">Plan je bezoek vandaag nog</a>
-          <a class="home-cta home-cta-alt" href="/Aanbod">Meer weten? Klik hier</a>
         </div>
       </div>
     </section>
     """,
     unsafe_allow_html=True,
 )
+st.page_link("pages/8_Aanbod.py", label="Meer weten? Klik hier", width="stretch")
 
 st.markdown('<div class="home-content">', unsafe_allow_html=True)
 
@@ -303,13 +311,13 @@ st.markdown(
         <li>Drempelwaardes</li>
         <li>Wattage zones</li>
         <li>Nog meer (zie Aanbod)</li>
-        <li><a class="home-ai-inline" href="/Mijn_SportTesting_AI">AI-coach</a></li>
       </ul>
       <a class="home-cta" href="{CTA_URL}">Klik hier voor je afspraak</a>
     </article>
     """,
     unsafe_allow_html=True,
 )
+st.page_link("pages/7_Mijn_SportTesting_AI.py", label="AI-coach", width="stretch")
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)
 st.markdown(
@@ -351,12 +359,9 @@ with loc_left:
         <article class="home-card">
           <h3>Het Marnix</h3>
           <p>Afspraak in het Marnixgebouw (Amsterdam). Persoonlijke testafname met directe uitleg en vertaling naar training.</p>
-          <iframe
-            class="home-map"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=Marnixplein+1,+1015+ZN+Amsterdam&output=embed">
-          </iframe>
+          <div class="home-map">
+            <a class="home-map-link" href="https://www.google.com/maps?q=Marnixplein+1,+1015+ZN+Amsterdam" target="_blank" rel="noopener noreferrer">Open kaart</a>
+          </div>
         </article>
         """,
         unsafe_allow_html=True,
@@ -364,16 +369,13 @@ with loc_left:
 
 with loc_right:
     st.markdown(
-        """
+        f"""
         <article class="home-card">
           <h3>Aan huis</h3>
           <p>Mogelijk mits in bezit van een fietstrainer met wattagemeter en Bluetooth. In overleg: stuur een mailtje.</p>
-          <iframe
-            class="home-map"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=Amsterdam&output=embed">
-          </iframe>
+          <div class="home-map">
+            <a class="home-map-link" href="{CTA_URL}" target="_blank" rel="noopener noreferrer">Mail voor overleg</a>
+          </div>
         </article>
         """,
         unsafe_allow_html=True,

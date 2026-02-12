@@ -1,15 +1,8 @@
 from __future__ import annotations
 
-import base64
-import mimetypes
 from pathlib import Path
 
 import streamlit as st
-
-
-@st.cache_data(show_spinner=False)
-def file_b64(path: str) -> str:
-    return base64.b64encode(Path(path).read_bytes()).decode("utf-8")
 
 NAV_ITEMS = [
     ("Home", "app.py"),
@@ -193,24 +186,15 @@ def inject_global_css() -> None:
 
 
 def top_nav(active: str) -> None:
-    logo_path = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
-    logo_uri = ""
-    if logo_path.exists():
-        mime_type, _ = mimetypes.guess_type(logo_path.name)
-        if mime_type is None:
-            mime_type = "image/png"
-        payload = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
-        logo_uri = f"data:{mime_type};base64,{payload}"
+    assets_dir = Path(__file__).resolve().parents[1] / "assets"
+    logo_path = assets_dir / "logo-web.png"
+    if not logo_path.exists():
+        logo_path = assets_dir / "logo.png"
     logo_col, nav_col = st.columns([0.14, 0.86], gap="small")
 
     with logo_col:
-        st.markdown('<div class="sm-logo-wrap">', unsafe_allow_html=True)
-        if logo_uri:
-            st.markdown(
-                f'<img src="{logo_uri}" alt="SportMetrics logo" style="width: 112px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />',
-                unsafe_allow_html=True,
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
+        if logo_path.exists():
+            st.image(str(logo_path), width=112)
 
     with nav_col:
         if _is_mobile_client():
