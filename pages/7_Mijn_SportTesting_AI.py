@@ -163,6 +163,7 @@ BELANGRIJKE REGELS:
 4. Geen medisch advies.
 5. Geef altijd een props aan de persoon voor de test en bedank dat hij of zij dat bij SportMetrics heeft gedaan.
 6. Noem NOOIT expliciet de bronnaam "Reader trainingsleer 2024-2025" (of varianten daarop). Gebruik wel de inhoud, maar verwijs alleen algemeen naar trainingsliteratuur.
+7. Noem CP en W' alleen als de hulpvraag expliciet gaat over sprinten, klimmen of korte piekinspanningen.
 """
 
 if api_ready:
@@ -219,6 +220,26 @@ def sanitize_response(text: str) -> str:
 def avatar_for(role: str) -> str:
     return "🤖" if role == "assistant" else "🙂"
 
+
+def question_mentions_cp_context(question: str) -> bool:
+    q = question.lower()
+    keywords = (
+        "sprint",
+        "sprints",
+        "sprinten",
+        "klim",
+        "klimmen",
+        "klimmet",
+        "heuvel",
+        "heuvels",
+        "piekinspanning",
+        "piekinspanningen",
+        "anaeroob",
+        "explosief",
+    )
+    return any(keyword in q for keyword in keywords)
+
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=avatar_for(message["role"])):
         st.markdown(message["content"])
@@ -241,7 +262,16 @@ if prompt:
         )
         del st.session_state["last_uploaded_text"]
 
-    full_prompt_for_ai = prompt + extra_context
+    if question_mentions_cp_context(prompt):
+        cp_instruction = (
+            "Gebruik CP en W' alleen als dit direct helpt bij sprinten, klimmen of korte piekinspanningen."
+        )
+    else:
+        cp_instruction = (
+            "Noem CP en W' niet in je antwoord, tenzij de vraag expliciet over sprinten, klimmen of korte piekinspanningen gaat."
+        )
+
+    full_prompt_for_ai = f"{cp_instruction}\n\nVraag van de sporter:\n{prompt}{extra_context}"
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar=avatar_for("user")):

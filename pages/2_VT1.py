@@ -501,6 +501,11 @@ HTML_PAGE = r"""
         </div>
       </div>
       <p class="muted">VT1 valt vaak in wat veel modellen "zone 2" noemen. VT1 is het fysiologische anker om die zone te kalibreren.</p>
+      <div class="callout">
+        <strong>Wat is drift?</strong> Drift is de geleidelijke stijging van je hartslag tijdens langdurige cardio, terwijl tempo en inspanning gelijk blijven.<br/><br/>
+        <strong>Training in zones:</strong> train je op hartslag (bijvoorbeeld Zone 2), dan kan drift ervoor zorgen dat je ongemerkt in een hogere zone traint dan bedoeld.<br/><br/>
+        <strong>Prestatie-indicator:</strong> te sterke drift kan wijzen op oververmoeidheid, onvoldoende conditie-opbouw of slechte hydratatie.
+      </div>
     </section>
 
     <section id="sportmetrics" data-title="SportMetrics">

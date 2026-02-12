@@ -51,16 +51,6 @@ def prepare_report_photo(image_path: Path):
         return ImageOps.fit(fixed, (900, 1200), method=Image.LANCZOS)
 
 
-def prepare_offer_photo(image_path: Path):
-    if Image is None or ImageOps is None:
-        return str(image_path)
-    with Image.open(image_path) as image:
-        fixed = ImageOps.exif_transpose(image).convert("RGB")
-        if fixed.width > fixed.height:
-            fixed = fixed.rotate(90, expand=True, fillcolor=(255, 255, 255))
-        return ImageOps.fit(fixed, (900, 1200), method=Image.LANCZOS)
-
-
 def rotate_folkert_portrait(image_path: Path):
     if Image is None or ImageOps is None:
         return str(image_path)
@@ -92,15 +82,6 @@ folkert_candidates = sorted(
     ]
 )
 folkert_photo = folkert_candidates[0] if folkert_candidates else None
-
-offer_photo_candidates = sorted(
-    [
-        path
-        for path in asset_dir.glob("*")
-        if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"} and "fotoaanbod" in path.name.lower()
-    ]
-)
-offer_photo = offer_photo_candidates[0] if offer_photo_candidates else None
 
 st.markdown(
     """
@@ -167,10 +148,6 @@ st.markdown(
 
       .offer-card-compact h3 {
         font-size: 0.98rem;
-      }
-
-      .offer-photo-wrap {
-        margin-top: 0.85rem;
       }
 
       .offer-card h3 {
@@ -291,17 +268,13 @@ with right_col:
         """,
         unsafe_allow_html=True,
     )
-    if offer_photo and offer_photo.exists():
-        st.markdown('<div class="offer-photo-wrap"></div>', unsafe_allow_html=True)
-        _, photo_center, _ = st.columns([0.08, 0.84, 0.08], gap="small")
-        with photo_center:
-            st.image(prepare_offer_photo(offer_photo), width="stretch")
 
 st.markdown(
-    """
+    f"""
     <section class="offer-section">
       <h2>Prijzenpakket</h2>
       <p class="offer-kicker">NU ACTIE SEIZOENSSTART!</p>
+      <a class="offer-cta" href="{CTA_URL}">Boek hier</a>
     </section>
     """,
     unsafe_allow_html=True,

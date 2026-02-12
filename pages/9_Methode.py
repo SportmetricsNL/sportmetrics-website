@@ -205,6 +205,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.page_link("pages/1_VO2max.py", label="Start met VO2max", width="stretch")
+st.page_link("pages/4_Energiesystemen.py", label="Start met Energiesystemen", width="stretch")
 st.markdown(f'<a class="method-cta" href="{CTA_URL}">Klik hier voor je afspraak</a>', unsafe_allow_html=True)
 st.markdown('<p class="method-footer">We zien je snel bij SportMetrics.</p>', unsafe_allow_html=True)
