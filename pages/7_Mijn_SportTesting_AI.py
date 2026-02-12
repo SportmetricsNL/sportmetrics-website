@@ -1,4 +1,10 @@
+import os
+import sys
 import importlib.util
+from pathlib import Path
+
+import streamlit as st
+import google.generativeai as genai
 import sys
 from pathlib import Path
 
@@ -94,14 +100,23 @@ model = None
 
 # --- 1. CONFIGURATIE & API ---
 try:
-    if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"].strip():
-        api_key = st.secrets["GEMINI_API_KEY"].strip()
-        genai.configure(api_key=api_key)
-        api_ready = True
-    else:
-        st.warning("API-key ontbreekt. Voeg GEMINI_API_KEY toe in secrets.toml om de AI-chat te activeren.")
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        try:
+            api_key = st.secrets.get("GEMINI_API_KEY")
+        except Exception:
+            api_key = None
+
+    if not api_key or not str(api_key).strip():
+        st.error("Geen API key. Zet GEMINI_API_KEY in Railway Variables (prod) of in .streamlit/secrets.toml (lokaal).")
+        st.stop()
+
+    genai.configure(api_key=str(api_key).strip())
+
 except Exception as e:
     st.error(f"Fout bij API-configuratie: {e}")
+    st.stop()
 
 
 # --- 2. KENNIS LADEN (PDF & DOCX) ---
