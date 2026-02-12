@@ -4,14 +4,9 @@ import importlib.util
 from pathlib import Path
 
 import streamlit as st
-import google.generativeai as genai
-import sys
-from pathlib import Path
-
+import pypdf
 import docx
 import google.generativeai as genai
-import pypdf
-import streamlit as st
 
 # Pagina instellingen
 st.set_page_config(page_title="Sportfysioloog AI", page_icon="🚴")
@@ -64,22 +59,6 @@ st.markdown(
         background: #f6fbfc;
       }
 
-      div[data-testid="stFileUploaderDropzoneInstructions"] > div {
-        display: none;
-      }
-
-      div[data-testid="stFileUploaderDropzone"] small,
-      div[data-testid="stFileUploaderDropzone"] p {
-        display: none;
-      }
-
-      div[data-testid="stFileUploaderDropzoneInstructions"]::before {
-        content: "Sleep je PDF hier of klik op bladeren";
-        color: #2f5f69;
-        font-weight: 600;
-        font-size: 0.92rem;
-      }
-
       .ai-footer {
         margin-top: 1.6rem;
         text-align: center;
@@ -109,14 +88,13 @@ try:
             api_key = None
 
     if not api_key or not str(api_key).strip():
-        st.error("Geen API key. Zet GEMINI_API_KEY in Railway Variables (prod) of in .streamlit/secrets.toml (lokaal).")
-        st.stop()
-
-    genai.configure(api_key=str(api_key).strip())
+        st.warning("Geen API key gevonden. Zet GEMINI_API_KEY in Railway Variables (prod) of in .streamlit/secrets.toml (lokaal).")
+    else:
+        genai.configure(api_key=str(api_key).strip())
+        api_ready = True
 
 except Exception as e:
     st.error(f"Fout bij API-configuratie: {e}")
-    st.stop()
 
 
 # --- 2. KENNIS LADEN (PDF & DOCX) ---
@@ -201,11 +179,12 @@ if "messages" not in st.session_state:
 
 with st.expander("Klik hier om je PDF-rapport te uploaden", expanded=False):
     st.caption("Na upload wordt de inhoud automatisch meegenomen in je eerstvolgende vraag.")
+    st.markdown("**Upload je testresultaat (PDF)**")
     uploaded_file = st.file_uploader(
         "Upload je testresultaat (PDF)",
         type="pdf",
         key="mobile_uploader",
-        label_visibility="visible",
+        label_visibility="collapsed",
     )
 
     if uploaded_file is not None:
@@ -227,10 +206,14 @@ for message in st.session_state.messages:
 
 prompt = st.chat_input(
     "Stel je vraag of zeg 'Maak mijn zones'...",
-    disabled=(not api_ready or model is None),
+    disabled=(model is None),
 )
 
 if prompt:
+    if model is None:
+        st.error("AI-model niet beschikbaar. Controleer je API key (GEMINI_API_KEY).")
+        st.stop()
+
     extra_context = ""
     if "last_uploaded_text" in st.session_state:
         extra_context = (
