@@ -436,6 +436,8 @@ def _render_step_navigation(step: int) -> None:
 def _render_plan_form() -> None:
     _init_booking_state()
     step = int(_booking_value("step"))
+    if bool(_booking_value("terms")) and st.session_state.get(f"{BOOKING_PREFIX}errors"):
+        st.session_state[f"{BOOKING_PREFIX}errors"] = []
     st.caption(f"Stap {step} van {BOOKING_STEP_COUNT}")
     st.progress(step / BOOKING_STEP_COUNT)
 
@@ -521,6 +523,10 @@ def _render_plan_form() -> None:
             - **Sekse:** {_display_value(_booking_value("sex"))}
             - **Bijzonderheden:** {_display_value(_booking_value("notes"))}
             """
+        )
+        st.checkbox(
+            "Ik ga akkoord met de algemene voorwaarden en heb deze gelezen op de website.",
+            key=f"{BOOKING_PREFIX}terms",
         )
         st.caption("Na klikken op 'Plan mijn test' openen we je mailapp met alle ingevulde gegevens.")
 
