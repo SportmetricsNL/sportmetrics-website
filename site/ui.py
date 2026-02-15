@@ -221,15 +221,22 @@ def inject_global_css() -> None:
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0.56rem 0.9rem;
-            border-radius: 999px;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
             border: 1px solid #236ad9;
             background: #236ad9;
             color: #ffffff !important;
             text-decoration: none !important;
             font-weight: 700;
-            font-size: 0.84rem;
             box-shadow: 0 10px 22px rgba(35, 106, 217, 0.25);
+          }
+
+          .sm-instagram-fab svg {
+            width: 21px;
+            height: 21px;
+            fill: #ffffff;
           }
 
           .sm-instagram-fab:hover,
@@ -293,7 +300,7 @@ def top_nav(active: str) -> None:
 
     with logo_col:
         if logo_path.exists():
-            st.image(str(logo_path), width=112)
+            st.image(str(logo_path), width=170)
 
     with nav_col:
         if _is_mobile_client():
@@ -319,7 +326,7 @@ def top_nav(active: str) -> None:
 
     st.markdown('<div class="sm-nav-space"></div>', unsafe_allow_html=True)
     st.markdown(
-        '<a class="sm-instagram-fab" href="https://www.instagram.com/sportmetricsnl/" target="_blank" rel="noopener noreferrer">Instagram</a>',
+        '<a class="sm-instagram-fab" href="https://www.instagram.com/sportmetricsnl/" target="_blank" rel="noopener noreferrer" aria-label="SportMetrics Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5a4.25 4.25 0 0 0 4.25 4.25h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5Zm8.94 1.8a.95.95 0 1 1 0 1.9.95.95 0 0 1 0-1.9ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg></a>',
         unsafe_allow_html=True,
     )
 
@@ -334,6 +341,7 @@ def _booking_defaults() -> dict[str, object]:
         f"{BOOKING_PREFIX}rides_per_week": "",
         f"{BOOKING_PREFIX}hours_per_week": 0.0,
         f"{BOOKING_PREFIX}axle_type": "",
+        f"{BOOKING_PREFIX}location_preference": "",
         f"{BOOKING_PREFIX}name": "",
         f"{BOOKING_PREFIX}email": "",
         f"{BOOKING_PREFIX}phone": "",
@@ -387,6 +395,7 @@ def _build_booking_mailto() -> str:
     rides_per_week = _booking_value("rides_per_week")
     hours_per_week = _booking_value("hours_per_week")
     axle_type = _booking_value("axle_type")
+    location_preference = _booking_value("location_preference")
     name = _booking_value("name")
     email = _booking_value("email")
     phone = _booking_value("phone")
@@ -414,6 +423,7 @@ def _build_booking_mailto() -> str:
                 "",
                 "BLOK 3 - FIETSINFORMATIE",
                 f"Type achteras: {_display_value(axle_type)}",
+                f"Locatie voorkeur: {_display_value(location_preference)}",
                 "",
                 "BLOK 4 - PERSOONSGEGEVENS",
                 f"Naam: {_display_value(name)}",
@@ -507,6 +517,16 @@ def _render_plan_form() -> None:
             format_func=lambda x: "Kies een optie" if x == "" else x,
             key=f"{BOOKING_PREFIX}axle_type",
         )
+        st.selectbox(
+            "Locatie voorkeur",
+            [
+                "",
+                "Marnixgebouw (Amsterdam)",
+                "Aan huis (mits hometrainer met Bluetooth, wattagemeting en ERG-modus)",
+            ],
+            format_func=lambda x: "Kies een optie" if x == "" else x,
+            key=f"{BOOKING_PREFIX}location_preference",
+        )
         st.markdown("**Blok 4 - Persoonsgegevens**")
         st.text_input("Naam", key=f"{BOOKING_PREFIX}name")
         st.text_input("E-mailadres", key=f"{BOOKING_PREFIX}email")
@@ -533,6 +553,7 @@ def _render_plan_form() -> None:
             - **Fietsen per week:** {_display_value(_booking_value("rides_per_week"))}
             - **Uren per week:** {_display_value(_booking_value("hours_per_week"), "number")}
             - **Type achteras:** {_display_value(_booking_value("axle_type"))}
+            - **Locatie voorkeur:** {_display_value(_booking_value("location_preference"))}
             - **Naam:** {_display_value(_booking_value("name"))}
             - **E-mail:** {_display_value(_booking_value("email"))}
             - **Telefoon:** {_display_value(_booking_value("phone"))}
@@ -573,9 +594,14 @@ def plan_test_button(
     use_container_width: bool = False,
 ) -> None:
     if st.button(label, key=key, use_container_width=use_container_width):
-        reset_booking_form()
-        st.session_state[BOOKING_OPEN_KEY] = True
-        st.session_state[BOOKING_PAGE_KEY] = page_id
+        open_now = bool(st.session_state.get(BOOKING_OPEN_KEY, False))
+        current_page = st.session_state.get(BOOKING_PAGE_KEY, "")
+        if not open_now:
+            reset_booking_form()
+            st.session_state[BOOKING_OPEN_KEY] = True
+            st.session_state[BOOKING_PAGE_KEY] = page_id
+        elif current_page != page_id:
+            st.session_state[BOOKING_PAGE_KEY] = page_id
         st.rerun()
 
 
