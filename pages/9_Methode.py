@@ -23,7 +23,7 @@ from site.ui import inject_global_css, plan_test_button, render_plan_dialog_if_o
 
 inject_global_css()
 top_nav(active="Methode")
-render_plan_dialog_if_open()
+render_plan_dialog_if_open(page_id="methode")
 
 st.markdown(
     """
@@ -176,7 +176,7 @@ hero_pad_l, hero_left, hero_right, hero_pad_r = st.columns([0.06, 0.44, 0.44, 0.
 with hero_left:
     st.link_button("Bekijk Aanbod", "/Aanbod", use_container_width=True)
 with hero_right:
-    plan_test_button("Plan je meting", key="method_hero_plan", use_container_width=True)
+    plan_test_button("Plan je meting", key="method_hero_plan", page_id="methode", use_container_width=True)
 
 st.markdown(
     """
@@ -351,6 +351,6 @@ st.markdown(
 )
 bottom_pad_l, bottom_plan_col, bottom_pad_r = st.columns([0.2, 0.6, 0.2], gap="small")
 with bottom_plan_col:
-    plan_test_button("Plan je meting", key="method_bottom_plan", use_container_width=True)
+    plan_test_button("Plan je meting", key="method_bottom_plan", page_id="methode", use_container_width=True)
 
 st.markdown('<p class="method-footer">We zien je snel bij SportMetrics.</p>', unsafe_allow_html=True)

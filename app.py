@@ -25,7 +25,7 @@ from site.ui import inject_global_css, plan_test_button, render_plan_dialog_if_o
 
 inject_global_css()
 top_nav(active="Home")
-render_plan_dialog_if_open()
+render_plan_dialog_if_open(page_id="home")
 
 
 @st.cache_data(show_spinner=False)
@@ -296,7 +296,7 @@ st.markdown(
 
 hero_pad_l, hero_action_left, hero_action_right, hero_pad_r = st.columns([0.06, 0.44, 0.44, 0.06], gap="small")
 with hero_action_left:
-    plan_test_button("Plan je bezoek vandaag nog", key="home_hero_plan", use_container_width=True)
+    plan_test_button("Plan je bezoek vandaag nog", key="home_hero_plan", page_id="home", use_container_width=True)
 with hero_action_right:
     st.link_button("Meer weten? Klik hier", "/Aanbod", use_container_width=True)
 
@@ -321,7 +321,7 @@ st.markdown(
 )
 services_pad_l, services_plan_col, services_pad_r = st.columns([0.06, 0.88, 0.06], gap="small")
 with services_plan_col:
-    plan_test_button("Klik hier voor je afspraak", key="home_services_plan", use_container_width=True)
+    plan_test_button("Klik hier voor je afspraak", key="home_services_plan", page_id="home", use_container_width=True)
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)
 st.markdown(

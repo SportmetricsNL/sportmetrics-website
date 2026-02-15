@@ -23,6 +23,7 @@ BOOKING_EMAIL = "folkertvinke@gmail.com"
 BOOKING_STEP_COUNT = 4
 BOOKING_PREFIX = "sm_booking_"
 BOOKING_OPEN_KEY = f"{BOOKING_PREFIX}open"
+BOOKING_PAGE_KEY = f"{BOOKING_PREFIX}page"
 
 
 def _is_mobile_client() -> bool:
@@ -324,6 +325,7 @@ def _init_booking_state() -> None:
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
     st.session_state.setdefault(BOOKING_OPEN_KEY, False)
+    st.session_state.setdefault(BOOKING_PAGE_KEY, "")
 
 
 def _booking_value(name: str) -> object:
@@ -332,32 +334,24 @@ def _booking_value(name: str) -> object:
 
 def _collect_booking_errors() -> list[str]:
     errors: list[str] = []
-    if not str(_booking_value("goal")).strip():
-        errors.append("Vul het doel van je test in.")
-    if not str(_booking_value("rides_per_week")).strip():
-        errors.append("Kies hoe vaak je per week fietst.")
-    if float(_booking_value("hours_per_week")) <= 0:
-        errors.append("Vul het aantal trainingsuren per week in.")
-    ftp = str(_booking_value("ftp")).strip()
-    level = str(_booking_value("performance_level")).strip()
-    if not ftp and not level:
-        errors.append("Vul FTP in of omschrijf kort je huidige niveau.")
-    if not str(_booking_value("axle_type")).strip():
-        errors.append("Kies het type achteras.")
-    if not str(_booking_value("name")).strip():
-        errors.append("Vul je naam in.")
-    email = str(_booking_value("email")).strip()
-    if "@" not in email or "." not in email:
-        errors.append("Vul een geldig e-mailadres in.")
-    if not str(_booking_value("phone")).strip():
-        errors.append("Vul je telefoonnummer in.")
-    if float(_booking_value("height_cm")) <= 0:
-        errors.append("Vul je lengte in centimeters in.")
-    if float(_booking_value("weight_kg")) <= 0:
-        errors.append("Vul je gewicht in kilogram in.")
     if not bool(_booking_value("terms")):
         errors.append("Je moet akkoord gaan met de algemene voorwaarden.")
     return errors
+
+
+def _display_value(value: object, kind: str = "text") -> str:
+    if kind == "number":
+        try:
+            as_float = float(value)
+            if as_float <= 0:
+                return "Niet ingevuld"
+            if as_float.is_integer():
+                return str(int(as_float))
+            return str(as_float)
+        except Exception:
+            return "Niet ingevuld"
+    text = str(value).strip()
+    return text if text else "Niet ingevuld"
 
 
 def _build_booking_mailto() -> str:
@@ -377,7 +371,7 @@ def _build_booking_mailto() -> str:
     sex = _booking_value("sex")
     notes = _booking_value("notes")
 
-    subject = quote(f"Nieuwe testaanvraag: {name}")
+    subject = quote(f"Nieuwe testaanvraag: {_display_value(name)}")
     body = quote(
         "\n".join(
             [
@@ -387,26 +381,26 @@ def _build_booking_mailto() -> str:
                 f"Type test: {test_type}",
                 "",
                 "BLOK 2 - DOEL & TRAININGSACHTERGROND",
-                f"Doel test: {goal}",
-                f"FTP: {ftp if str(ftp).strip() else 'Niet ingevuld'}",
-                f"Huidig niveau: {performance_level if str(performance_level).strip() else 'Niet ingevuld'}",
-                f"Hoe vaak per week: {rides_per_week}",
-                f"Uur per week: {hours_per_week}",
+                f"Doel test: {_display_value(goal)}",
+                f"FTP: {_display_value(ftp)}",
+                f"Huidig niveau: {_display_value(performance_level)}",
+                f"Hoe vaak per week: {_display_value(rides_per_week)}",
+                f"Uur per week: {_display_value(hours_per_week, 'number')}",
                 "",
                 "BLOK 3 - FIETSINFORMATIE",
-                f"Type achteras: {axle_type}",
+                f"Type achteras: {_display_value(axle_type)}",
                 "",
                 "BLOK 4 - PERSOONSGEGEVENS",
-                f"Naam: {name}",
-                f"E-mail: {email}",
-                f"Telefoon: {phone}",
-                f"Lengte (cm): {height_cm}",
-                f"Gewicht (kg): {weight_kg}",
+                f"Naam: {_display_value(name)}",
+                f"E-mail: {_display_value(email)}",
+                f"Telefoon: {_display_value(phone)}",
+                f"Lengte (cm): {_display_value(height_cm, 'number')}",
+                f"Gewicht (kg): {_display_value(weight_kg, 'number')}",
                 f"Geboortedatum: {birth_date}",
-                f"Sekse: {sex}",
+                f"Sekse: {_display_value(sex)}",
                 "",
                 "BLOK 5 - BIJZONDERHEDEN",
-                f"Opmerkingen/vragen/medisch: {notes if str(notes).strip() else 'Geen'}",
+                f"Opmerkingen/vragen/medisch: {_display_value(notes)}",
                 "",
                 "BLOK 6 - VOORWAARDEN",
                 "Akkoord met voorwaarden: Ja",
@@ -434,7 +428,7 @@ def _render_step_navigation(step: int) -> None:
                 errors = _collect_booking_errors()
                 st.session_state[f"{BOOKING_PREFIX}errors"] = errors
                 if errors:
-                    st.error("Niet alle verplichte velden zijn ingevuld. Controleer je gegevens.")
+                    st.error("Je moet akkoord gaan met de algemene voorwaarden om te versturen.")
                 else:
                     st.session_state[f"{BOOKING_PREFIX}mailto"] = _build_booking_mailto()
 
@@ -465,17 +459,17 @@ def _render_plan_form() -> None:
             key=f"{BOOKING_PREFIX}test_type",
         )
         st.markdown("**Blok 2 - Doel & trainingsachtergrond**")
-        st.text_area("Wat is het doel van je test? *", key=f"{BOOKING_PREFIX}goal", height=90)
+        st.text_area("Wat is het doel van je test?", key=f"{BOOKING_PREFIX}goal", height=90)
         st.text_input("FTP (optioneel)", key=f"{BOOKING_PREFIX}ftp")
         st.text_area("Of omschrijf kort je huidige niveau", key=f"{BOOKING_PREFIX}performance_level", height=70)
         st.selectbox(
-            "Hoe vaak fiets je per week? *",
+            "Hoe vaak fiets je per week?",
             ["", "1-2 keer", "3-4 keer", "5+ keer"],
             format_func=lambda x: "Kies een optie" if x == "" else x,
             key=f"{BOOKING_PREFIX}rides_per_week",
         )
         st.number_input(
-            "Hoeveel uur per week? *",
+            "Hoeveel uur per week?",
             min_value=0.0,
             step=0.5,
             key=f"{BOOKING_PREFIX}hours_per_week",
@@ -483,17 +477,17 @@ def _render_plan_form() -> None:
     elif step == 2:
         st.markdown("**Blok 3 - Fietsinformatie**")
         st.selectbox(
-            "Type achteras *",
+            "Type achteras",
             ["", "Quick release (wiel los met draaiklem)", "Through axle (as los met inbus)"],
             format_func=lambda x: "Kies een optie" if x == "" else x,
             key=f"{BOOKING_PREFIX}axle_type",
         )
         st.markdown("**Blok 4 - Persoonsgegevens**")
-        st.text_input("Naam *", key=f"{BOOKING_PREFIX}name")
-        st.text_input("E-mailadres *", key=f"{BOOKING_PREFIX}email")
-        st.text_input("Telefoonnummer *", key=f"{BOOKING_PREFIX}phone")
-        st.number_input("Lengte (cm) *", min_value=0.0, step=1.0, key=f"{BOOKING_PREFIX}height_cm")
-        st.number_input("Gewicht (kg) *", min_value=0.0, step=0.1, key=f"{BOOKING_PREFIX}weight_kg")
+        st.text_input("Naam", key=f"{BOOKING_PREFIX}name")
+        st.text_input("E-mailadres", key=f"{BOOKING_PREFIX}email")
+        st.text_input("Telefoonnummer", key=f"{BOOKING_PREFIX}phone")
+        st.number_input("Lengte (cm)", min_value=0.0, step=1.0, key=f"{BOOKING_PREFIX}height_cm")
+        st.number_input("Gewicht (kg)", min_value=0.0, step=0.1, key=f"{BOOKING_PREFIX}weight_kg")
     elif step == 3:
         st.markdown("**Aanvullende gegevens**")
         st.date_input("Geboortedatum", key=f"{BOOKING_PREFIX}birth_date")
@@ -511,12 +505,21 @@ def _render_plan_form() -> None:
         st.markdown("**Controleer je gegevens**")
         st.markdown(
             f"""
-            - **Type test:** {_booking_value("test_type")}
-            - **Doel:** {_booking_value("goal")}
-            - **Naam:** {_booking_value("name")}
-            - **E-mail:** {_booking_value("email")}
-            - **Telefoon:** {_booking_value("phone")}
-            - **Type achteras:** {_booking_value("axle_type")}
+            - **Type test:** {_display_value(_booking_value("test_type"))}
+            - **Doel:** {_display_value(_booking_value("goal"))}
+            - **FTP:** {_display_value(_booking_value("ftp"))}
+            - **Huidig niveau:** {_display_value(_booking_value("performance_level"))}
+            - **Fietsen per week:** {_display_value(_booking_value("rides_per_week"))}
+            - **Uren per week:** {_display_value(_booking_value("hours_per_week"), "number")}
+            - **Type achteras:** {_display_value(_booking_value("axle_type"))}
+            - **Naam:** {_display_value(_booking_value("name"))}
+            - **E-mail:** {_display_value(_booking_value("email"))}
+            - **Telefoon:** {_display_value(_booking_value("phone"))}
+            - **Lengte (cm):** {_display_value(_booking_value("height_cm"), "number")}
+            - **Gewicht (kg):** {_display_value(_booking_value("weight_kg"), "number")}
+            - **Geboortedatum:** {_booking_value("birth_date")}
+            - **Sekse:** {_display_value(_booking_value("sex"))}
+            - **Bijzonderheden:** {_display_value(_booking_value("notes"))}
             """
         )
         st.caption("Na klikken op 'Plan mijn test' openen we je mailapp met alle ingevulde gegevens.")
@@ -552,16 +555,20 @@ def plan_test_button(
     label: str = "Plan je meting",
     *,
     key: str,
+    page_id: str,
     use_container_width: bool = False,
 ) -> None:
     if st.button(label, key=key, use_container_width=use_container_width):
         reset_booking_form()
         st.session_state[f"{BOOKING_PREFIX}errors"] = []
         st.session_state[BOOKING_OPEN_KEY] = True
+        st.session_state[BOOKING_PAGE_KEY] = page_id
         st.rerun()
 
 
-def render_plan_dialog_if_open() -> None:
+def render_plan_dialog_if_open(page_id: str) -> None:
     _init_booking_state()
-    if st.session_state.get(BOOKING_OPEN_KEY, False):
+    if st.session_state.get(BOOKING_OPEN_KEY, False) and st.session_state.get(BOOKING_PAGE_KEY) == page_id:
         _open_plan_dialog()
+    elif st.session_state.get(BOOKING_OPEN_KEY, False) and st.session_state.get(BOOKING_PAGE_KEY) != page_id:
+        st.session_state[BOOKING_OPEN_KEY] = False
