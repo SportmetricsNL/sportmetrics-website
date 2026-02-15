@@ -310,6 +310,7 @@ def _booking_defaults() -> dict[str, object]:
         f"{BOOKING_PREFIX}notes": "",
         f"{BOOKING_PREFIX}terms": False,
         f"{BOOKING_PREFIX}mailto": "",
+        f"{BOOKING_PREFIX}errors": [],
     }
 
 
@@ -329,40 +330,34 @@ def _booking_value(name: str) -> object:
     return st.session_state[f"{BOOKING_PREFIX}{name}"]
 
 
-def _validate_booking_step(step: int) -> bool:
+def _collect_booking_errors() -> list[str]:
     errors: list[str] = []
-    if step == 1:
-        if not str(_booking_value("goal")).strip():
-            errors.append("Vul het doel van je test in.")
-        if not str(_booking_value("rides_per_week")).strip():
-            errors.append("Kies hoe vaak je per week fietst.")
-        if float(_booking_value("hours_per_week")) <= 0:
-            errors.append("Vul het aantal trainingsuren per week in.")
-        ftp = str(_booking_value("ftp")).strip()
-        level = str(_booking_value("performance_level")).strip()
-        if not ftp and not level:
-            errors.append("Vul FTP in of omschrijf kort je huidige niveau.")
-    elif step == 2:
-        if not str(_booking_value("axle_type")).strip():
-            errors.append("Kies het type achteras.")
-        if not str(_booking_value("name")).strip():
-            errors.append("Vul je naam in.")
-        email = str(_booking_value("email")).strip()
-        if "@" not in email or "." not in email:
-            errors.append("Vul een geldig e-mailadres in.")
-        if not str(_booking_value("phone")).strip():
-            errors.append("Vul je telefoonnummer in.")
-        if float(_booking_value("height_cm")) <= 0:
-            errors.append("Vul je lengte in centimeters in.")
-        if float(_booking_value("weight_kg")) <= 0:
-            errors.append("Vul je gewicht in kilogram in.")
-    elif step == 3:
-        if not bool(_booking_value("terms")):
-            errors.append("Je moet akkoord gaan met de algemene voorwaarden.")
-
-    for error in errors:
-        st.error(error)
-    return not errors
+    if not str(_booking_value("goal")).strip():
+        errors.append("Vul het doel van je test in.")
+    if not str(_booking_value("rides_per_week")).strip():
+        errors.append("Kies hoe vaak je per week fietst.")
+    if float(_booking_value("hours_per_week")) <= 0:
+        errors.append("Vul het aantal trainingsuren per week in.")
+    ftp = str(_booking_value("ftp")).strip()
+    level = str(_booking_value("performance_level")).strip()
+    if not ftp and not level:
+        errors.append("Vul FTP in of omschrijf kort je huidige niveau.")
+    if not str(_booking_value("axle_type")).strip():
+        errors.append("Kies het type achteras.")
+    if not str(_booking_value("name")).strip():
+        errors.append("Vul je naam in.")
+    email = str(_booking_value("email")).strip()
+    if "@" not in email or "." not in email:
+        errors.append("Vul een geldig e-mailadres in.")
+    if not str(_booking_value("phone")).strip():
+        errors.append("Vul je telefoonnummer in.")
+    if float(_booking_value("height_cm")) <= 0:
+        errors.append("Vul je lengte in centimeters in.")
+    if float(_booking_value("weight_kg")) <= 0:
+        errors.append("Vul je gewicht in kilogram in.")
+    if not bool(_booking_value("terms")):
+        errors.append("Je moet akkoord gaan met de algemene voorwaarden.")
+    return errors
 
 
 def _build_booking_mailto() -> str:
@@ -431,19 +426,15 @@ def _render_step_navigation(step: int) -> None:
     with right:
         if step < BOOKING_STEP_COUNT:
             if st.button("Volgende", key=f"{BOOKING_PREFIX}next_{step}", use_container_width=True):
+                st.session_state[f"{BOOKING_PREFIX}errors"] = []
                 st.session_state[f"{BOOKING_PREFIX}step"] = step + 1
                 st.rerun()
         else:
             if st.button("Plan mijn test", key=f"{BOOKING_PREFIX}submit", use_container_width=True):
-                if not _validate_booking_step(1):
-                    st.session_state[f"{BOOKING_PREFIX}step"] = 1
-                    st.rerun()
-                elif not _validate_booking_step(2):
-                    st.session_state[f"{BOOKING_PREFIX}step"] = 2
-                    st.rerun()
-                elif not _validate_booking_step(3):
-                    st.session_state[f"{BOOKING_PREFIX}step"] = 3
-                    st.rerun()
+                errors = _collect_booking_errors()
+                st.session_state[f"{BOOKING_PREFIX}errors"] = errors
+                if errors:
+                    st.error("Niet alle verplichte velden zijn ingevuld. Controleer je gegevens.")
                 else:
                     st.session_state[f"{BOOKING_PREFIX}mailto"] = _build_booking_mailto()
 
@@ -457,6 +448,9 @@ def _render_plan_form() -> None:
     if st.button("Sluiten", key=f"{BOOKING_PREFIX}close_top", use_container_width=False):
         st.session_state[BOOKING_OPEN_KEY] = False
         st.rerun()
+
+    for error in st.session_state.get(f"{BOOKING_PREFIX}errors", []):
+        st.error(error)
 
     if step == 1:
         st.markdown("**Blok 1 - Testkeuze**")
@@ -531,6 +525,7 @@ def _render_plan_form() -> None:
     mailto_url = str(_booking_value("mailto"))
     if mailto_url:
         st.success("Aanvraag opgesteld. Klik hieronder om de e-mail direct te openen.")
+        st.markdown(f"[Open e-mail naar Folkert]({mailto_url})")
         st.link_button("Open e-mail naar Folkert", mailto_url, use_container_width=True)
         if st.button("Nieuw formulier", key=f"{BOOKING_PREFIX}reset", use_container_width=True):
             reset_booking_form()
@@ -561,6 +556,7 @@ def plan_test_button(
 ) -> None:
     if st.button(label, key=key, use_container_width=use_container_width):
         reset_booking_form()
+        st.session_state[f"{BOOKING_PREFIX}errors"] = []
         st.session_state[BOOKING_OPEN_KEY] = True
         st.rerun()
 
