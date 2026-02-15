@@ -21,10 +21,11 @@ if "site.ui" not in sys.modules:
     spec.loader.exec_module(module)
     sys.modules["site.ui"] = module
 
-from site.ui import inject_global_css, plan_test_button, top_nav
+from site.ui import inject_global_css, plan_test_button, render_plan_dialog_if_open, top_nav
 
 inject_global_css()
 top_nav(active="Home")
+render_plan_dialog_if_open()
 
 
 @st.cache_data(show_spinner=False)
@@ -150,11 +151,6 @@ st.markdown(
       .home-cta:focus {{
         color: #ffffff;
         text-decoration: none !important;
-      }}
-
-      .home-cta-alt {{
-        margin-top: 0.55rem;
-        background: linear-gradient(140deg, #2b5f67 0%, #347983 100%);
       }}
 
       .home-content {{
@@ -298,7 +294,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-hero_action_left, hero_action_right = st.columns(2, gap="small")
+hero_pad_l, hero_action_left, hero_action_right, hero_pad_r = st.columns([0.06, 0.44, 0.44, 0.06], gap="small")
 with hero_action_left:
     plan_test_button("Plan je bezoek vandaag nog", key="home_hero_plan", use_container_width=True)
 with hero_action_right:
@@ -323,7 +319,9 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-plan_test_button("Klik hier voor je afspraak", key="home_services_plan", use_container_width=True)
+services_pad_l, services_plan_col, services_pad_r = st.columns([0.06, 0.88, 0.06], gap="small")
+with services_plan_col:
+    plan_test_button("Klik hier voor je afspraak", key="home_services_plan", use_container_width=True)
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)
 st.markdown(

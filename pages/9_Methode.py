@@ -19,10 +19,11 @@ if "site.ui" not in sys.modules:
     spec.loader.exec_module(module)
     sys.modules["site.ui"] = module
 
-from site.ui import inject_global_css, plan_test_button, top_nav
+from site.ui import inject_global_css, plan_test_button, render_plan_dialog_if_open, top_nav
 
 inject_global_css()
 top_nav(active="Methode")
+render_plan_dialog_if_open()
 
 st.markdown(
     """
@@ -171,7 +172,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-hero_left, hero_right = st.columns(2, gap="small")
+hero_pad_l, hero_left, hero_right, hero_pad_r = st.columns([0.06, 0.44, 0.44, 0.06], gap="small")
 with hero_left:
     st.link_button("Bekijk Aanbod", "/Aanbod", use_container_width=True)
 with hero_right:
@@ -314,61 +315,6 @@ with prep_c:
 
 st.markdown(
     """
-    <section class="method-section" style="padding:0.95rem;">
-      <h2>Checklist testafname (interne kwaliteit)</h2>
-    </section>
-    """,
-    unsafe_allow_html=True,
-)
-with st.expander("Toon checklist", expanded=False):
-    qa_a, qa_b, qa_c = st.columns(3, gap="large")
-    with qa_a:
-        st.markdown(
-            """
-            <article class="method-mini">
-              <h3>Voor start</h3>
-              <ul>
-                <li>Gezondheidscheck en testdoel</li>
-                <li>Masker lekcontrole</li>
-                <li>Hartslagband correct</li>
-                <li>Protocolkeuze bevestigd</li>
-              </ul>
-            </article>
-            """,
-            unsafe_allow_html=True,
-        )
-    with qa_b:
-        st.markdown(
-            """
-            <article class="method-mini">
-              <h3>Tijdens test</h3>
-              <ul>
-                <li>Cadans stabiel</li>
-                <li>Geen praten</li>
-                <li>Houding constant</li>
-                <li>Bijzonderheden noteren</li>
-              </ul>
-            </article>
-            """,
-            unsafe_allow_html=True,
-        )
-    with qa_c:
-        st.markdown(
-            """
-            <article class="method-mini">
-              <h3>Na test</h3>
-              <ul>
-                <li>Controle maximale inspanning</li>
-                <li>Drempels valideren</li>
-                <li>Rapport en advies opstellen</li>
-              </ul>
-            </article>
-            """,
-            unsafe_allow_html=True,
-        )
-
-st.markdown(
-    """
     <section class="method-section">
       <h2>Submaximale mogelijkheid</h2>
       <article class="method-compact">
@@ -403,6 +349,8 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-plan_test_button("Plan je meting", key="method_bottom_plan", use_container_width=True)
+bottom_pad_l, bottom_plan_col, bottom_pad_r = st.columns([0.2, 0.6, 0.2], gap="small")
+with bottom_plan_col:
+    plan_test_button("Plan je meting", key="method_bottom_plan", use_container_width=True)
 
 st.markdown('<p class="method-footer">We zien je snel bij SportMetrics.</p>', unsafe_allow_html=True)

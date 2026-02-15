@@ -22,6 +22,7 @@ NAV_ITEMS = [
 BOOKING_EMAIL = "folkertvinke@gmail.com"
 BOOKING_STEP_COUNT = 4
 BOOKING_PREFIX = "sm_booking_"
+BOOKING_OPEN_KEY = f"{BOOKING_PREFIX}open"
 
 
 def _is_mobile_client() -> bool:
@@ -146,6 +147,19 @@ def inject_global_css() -> None:
             transition: all 0.15s ease;
           }
 
+          div[data-testid="stButton"],
+          div[data-testid="stFormSubmitButton"],
+          div[data-testid="stLinkButton"] {
+            margin-top: 0.32rem;
+            margin-bottom: 0.32rem;
+          }
+
+          div[data-testid="stButton"] > button p,
+          div[data-testid="stFormSubmitButton"] > button p,
+          div[data-testid="stLinkButton"] > a p {
+            color: #ffffff !important;
+          }
+
           div[data-testid="stButton"] > button:hover,
           div[data-testid="stFormSubmitButton"] > button:hover,
           div[data-testid="stLinkButton"] > a:hover {
@@ -164,6 +178,15 @@ def inject_global_css() -> None:
             border-color: var(--sm-cta-blue-active) !important;
             color: #ffffff !important;
             box-shadow: 0 0 0 2px rgba(25, 79, 168, 0.22) !important;
+          }
+
+          div[data-testid="stButton"] > button:focus-visible p,
+          div[data-testid="stButton"] > button:active p,
+          div[data-testid="stFormSubmitButton"] > button:focus-visible p,
+          div[data-testid="stFormSubmitButton"] > button:active p,
+          div[data-testid="stLinkButton"] > a:focus-visible p,
+          div[data-testid="stLinkButton"] > a:active p {
+            color: #ffffff !important;
           }
 
           .sm-nav-space {
@@ -233,14 +256,14 @@ def inject_global_css() -> None:
 
 def top_nav(active: str) -> None:
     assets_dir = Path(__file__).resolve().parents[1] / "assets"
-    logo_path = assets_dir / "logo-web.png"
+    logo_path = assets_dir / "logo.png"
     if not logo_path.exists():
-        logo_path = assets_dir / "logo.png"
+        logo_path = assets_dir / "logo-web.png"
     logo_col, nav_col = st.columns([0.14, 0.86], gap="small")
 
     with logo_col:
         if logo_path.exists():
-            st.image(str(logo_path), width=112)
+            st.image(str(logo_path), width=96)
 
     with nav_col:
         if _is_mobile_client():
@@ -299,6 +322,7 @@ def _init_booking_state() -> None:
     defaults = _booking_defaults()
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
+    st.session_state.setdefault(BOOKING_OPEN_KEY, False)
 
 
 def _booking_value(name: str) -> object:
@@ -407,13 +431,20 @@ def _render_step_navigation(step: int) -> None:
     with right:
         if step < BOOKING_STEP_COUNT:
             if st.button("Volgende", key=f"{BOOKING_PREFIX}next_{step}", use_container_width=True):
-                if _validate_booking_step(step):
-                    st.session_state[f"{BOOKING_PREFIX}step"] = step + 1
-                    st.rerun()
+                st.session_state[f"{BOOKING_PREFIX}step"] = step + 1
+                st.rerun()
         else:
             if st.button("Plan mijn test", key=f"{BOOKING_PREFIX}submit", use_container_width=True):
-                all_valid = _validate_booking_step(1) and _validate_booking_step(2) and _validate_booking_step(3)
-                if all_valid:
+                if not _validate_booking_step(1):
+                    st.session_state[f"{BOOKING_PREFIX}step"] = 1
+                    st.rerun()
+                elif not _validate_booking_step(2):
+                    st.session_state[f"{BOOKING_PREFIX}step"] = 2
+                    st.rerun()
+                elif not _validate_booking_step(3):
+                    st.session_state[f"{BOOKING_PREFIX}step"] = 3
+                    st.rerun()
+                else:
                     st.session_state[f"{BOOKING_PREFIX}mailto"] = _build_booking_mailto()
 
 
@@ -422,6 +453,10 @@ def _render_plan_form() -> None:
     step = int(_booking_value("step"))
     st.caption(f"Stap {step} van {BOOKING_STEP_COUNT}")
     st.progress(step / BOOKING_STEP_COUNT)
+
+    if st.button("Sluiten", key=f"{BOOKING_PREFIX}close_top", use_container_width=False):
+        st.session_state[BOOKING_OPEN_KEY] = False
+        st.rerun()
 
     if step == 1:
         st.markdown("**Blok 1 - Testkeuze**")
@@ -500,6 +535,9 @@ def _render_plan_form() -> None:
         if st.button("Nieuw formulier", key=f"{BOOKING_PREFIX}reset", use_container_width=True):
             reset_booking_form()
             st.rerun()
+        if st.button("Popup sluiten", key=f"{BOOKING_PREFIX}close_bottom", use_container_width=True):
+            st.session_state[BOOKING_OPEN_KEY] = False
+            st.rerun()
 
 
 if hasattr(st, "dialog"):
@@ -523,4 +561,11 @@ def plan_test_button(
 ) -> None:
     if st.button(label, key=key, use_container_width=use_container_width):
         reset_booking_form()
+        st.session_state[BOOKING_OPEN_KEY] = True
+        st.rerun()
+
+
+def render_plan_dialog_if_open() -> None:
+    _init_booking_state()
+    if st.session_state.get(BOOKING_OPEN_KEY, False):
         _open_plan_dialog()
