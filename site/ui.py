@@ -300,7 +300,7 @@ def top_nav(active: str) -> None:
 
     with logo_col:
         if logo_path.exists():
-            st.image(str(logo_path), width=170)
+            st.image(str(logo_path), width=180)
 
     with nav_col:
         if _is_mobile_client():
@@ -358,6 +358,10 @@ def _booking_defaults() -> dict[str, object]:
 def reset_booking_form() -> None:
     for key, value in _booking_defaults().items():
         st.session_state[key] = value
+    widget_prefix = f"{BOOKING_PREFIX}w_"
+    for key in list(st.session_state.keys()):
+        if key.startswith(widget_prefix):
+            del st.session_state[key]
 
 
 def _init_booking_state() -> None:
@@ -370,6 +374,17 @@ def _init_booking_state() -> None:
 
 def _booking_value(name: str) -> object:
     return st.session_state[f"{BOOKING_PREFIX}{name}"]
+
+
+def _widget_key(name: str) -> str:
+    return f"{BOOKING_PREFIX}w_{name}"
+
+
+def _seed_widget(name: str) -> str:
+    key = _widget_key(name)
+    if key not in st.session_state:
+        st.session_state[key] = _booking_value(name)
+    return key
 
 
 def _display_value(value: object, kind: str = "text") -> str:
@@ -483,7 +498,7 @@ def _render_plan_form() -> None:
 
     if step == 1:
         st.markdown("**Blok 1 - Testkeuze**")
-        st.radio(
+        test_type = st.radio(
             "Welk type test wil je plannen?",
             [
                 "Zone & Drempel Test (Step)",
@@ -491,33 +506,44 @@ def _render_plan_form() -> None:
                 "Duurgrens Test (VT1)",
                 "Critical Power Testpakket (3 momenten)",
             ],
-            key=f"{BOOKING_PREFIX}test_type",
+            key=_seed_widget("test_type"),
         )
+        st.session_state[f"{BOOKING_PREFIX}test_type"] = test_type
         st.markdown("**Blok 2 - Doel & trainingsachtergrond**")
-        st.text_area("Wat is het doel van je test?", key=f"{BOOKING_PREFIX}goal", height=90)
-        st.text_input("FTP (optioneel)", key=f"{BOOKING_PREFIX}ftp")
-        st.text_area("Of omschrijf kort je huidige niveau", key=f"{BOOKING_PREFIX}performance_level", height=70)
-        st.selectbox(
+        goal = st.text_area("Wat is het doel van je test?", key=_seed_widget("goal"), height=90)
+        st.session_state[f"{BOOKING_PREFIX}goal"] = goal
+        ftp = st.text_input("FTP (optioneel)", key=_seed_widget("ftp"))
+        st.session_state[f"{BOOKING_PREFIX}ftp"] = ftp
+        performance_level = st.text_area(
+            "Of omschrijf kort je huidige niveau",
+            key=_seed_widget("performance_level"),
+            height=70,
+        )
+        st.session_state[f"{BOOKING_PREFIX}performance_level"] = performance_level
+        rides_per_week = st.selectbox(
             "Hoe vaak fiets je per week?",
             ["", "1-2 keer", "3-4 keer", "5+ keer"],
             format_func=lambda x: "Kies een optie" if x == "" else x,
-            key=f"{BOOKING_PREFIX}rides_per_week",
+            key=_seed_widget("rides_per_week"),
         )
-        st.number_input(
+        st.session_state[f"{BOOKING_PREFIX}rides_per_week"] = rides_per_week
+        hours_per_week = st.number_input(
             "Hoeveel uur per week?",
             min_value=0.0,
             step=0.5,
-            key=f"{BOOKING_PREFIX}hours_per_week",
+            key=_seed_widget("hours_per_week"),
         )
+        st.session_state[f"{BOOKING_PREFIX}hours_per_week"] = hours_per_week
     elif step == 2:
         st.markdown("**Blok 3 - Fietsinformatie**")
-        st.selectbox(
+        axle_type = st.selectbox(
             "Type achteras",
             ["", "Quick release (wiel los met draaiklem)", "Through axle (as los met inbus)"],
             format_func=lambda x: "Kies een optie" if x == "" else x,
-            key=f"{BOOKING_PREFIX}axle_type",
+            key=_seed_widget("axle_type"),
         )
-        st.selectbox(
+        st.session_state[f"{BOOKING_PREFIX}axle_type"] = axle_type
+        location_preference = st.selectbox(
             "Locatie voorkeur",
             [
                 "",
@@ -525,23 +551,32 @@ def _render_plan_form() -> None:
                 "Aan huis (mits hometrainer met Bluetooth, wattagemeting en ERG-modus)",
             ],
             format_func=lambda x: "Kies een optie" if x == "" else x,
-            key=f"{BOOKING_PREFIX}location_preference",
+            key=_seed_widget("location_preference"),
         )
+        st.session_state[f"{BOOKING_PREFIX}location_preference"] = location_preference
         st.markdown("**Blok 4 - Persoonsgegevens**")
-        st.text_input("Naam", key=f"{BOOKING_PREFIX}name")
-        st.text_input("E-mailadres", key=f"{BOOKING_PREFIX}email")
-        st.text_input("Telefoonnummer", key=f"{BOOKING_PREFIX}phone")
-        st.number_input("Lengte (cm)", min_value=0.0, step=1.0, key=f"{BOOKING_PREFIX}height_cm")
-        st.number_input("Gewicht (kg)", min_value=0.0, step=0.1, key=f"{BOOKING_PREFIX}weight_kg")
+        name = st.text_input("Naam", key=_seed_widget("name"))
+        st.session_state[f"{BOOKING_PREFIX}name"] = name
+        email = st.text_input("E-mailadres", key=_seed_widget("email"))
+        st.session_state[f"{BOOKING_PREFIX}email"] = email
+        phone = st.text_input("Telefoonnummer", key=_seed_widget("phone"))
+        st.session_state[f"{BOOKING_PREFIX}phone"] = phone
+        height_cm = st.number_input("Lengte (cm)", min_value=0.0, step=1.0, key=_seed_widget("height_cm"))
+        st.session_state[f"{BOOKING_PREFIX}height_cm"] = height_cm
+        weight_kg = st.number_input("Gewicht (kg)", min_value=0.0, step=0.1, key=_seed_widget("weight_kg"))
+        st.session_state[f"{BOOKING_PREFIX}weight_kg"] = weight_kg
     elif step == 3:
         st.markdown("**Aanvullende gegevens**")
-        st.date_input("Geboortedatum", key=f"{BOOKING_PREFIX}birth_date")
-        st.radio("Sekse", ["Man", "Vrouw", "Anders"], key=f"{BOOKING_PREFIX}sex", horizontal=True)
-        st.text_area(
+        birth_date = st.date_input("Geboortedatum", key=_seed_widget("birth_date"))
+        st.session_state[f"{BOOKING_PREFIX}birth_date"] = birth_date
+        sex = st.radio("Sekse", ["Man", "Vrouw", "Anders"], key=_seed_widget("sex"), horizontal=True)
+        st.session_state[f"{BOOKING_PREFIX}sex"] = sex
+        notes = st.text_area(
             "Opmerkingen / vragen / medische bijzonderheden",
-            key=f"{BOOKING_PREFIX}notes",
+            key=_seed_widget("notes"),
             height=110,
         )
+        st.session_state[f"{BOOKING_PREFIX}notes"] = notes
     else:
         st.markdown("**Controleer je gegevens**")
         st.markdown(
@@ -564,10 +599,11 @@ def _render_plan_form() -> None:
             - **Bijzonderheden:** {_display_value(_booking_value("notes"))}
             """
         )
-        st.checkbox(
+        terms = st.checkbox(
             "Ik ga akkoord met de algemene voorwaarden en heb deze gelezen op de website.",
-            key=f"{BOOKING_PREFIX}terms",
+            key=_seed_widget("terms"),
         )
+        st.session_state[f"{BOOKING_PREFIX}terms"] = bool(terms)
         st.caption("Na klikken op 'Plan mijn test' openen we je mailapp met alle ingevulde gegevens.")
 
     _render_step_navigation(step)
