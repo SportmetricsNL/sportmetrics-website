@@ -264,7 +264,7 @@ def top_nav(active: str) -> None:
 
     with logo_col:
         if logo_path.exists():
-            st.image(str(logo_path), width=96)
+            st.image(str(logo_path), width=112)
 
     with nav_col:
         if _is_mobile_client():
@@ -371,7 +371,7 @@ def _build_booking_mailto() -> str:
     sex = _booking_value("sex")
     notes = _booking_value("notes")
 
-    subject = quote(f"Nieuwe testaanvraag: {_display_value(name)}")
+    subject = quote(f"Nieuwe testaanvraag: {_display_value(name)}", safe="")
     body = quote(
         "\n".join(
             [
@@ -405,15 +405,18 @@ def _build_booking_mailto() -> str:
                 "BLOK 6 - VOORWAARDEN",
                 "Akkoord met voorwaarden: Ja",
             ]
-        )
+        ),
+        safe="",
     )
     return f"mailto:{BOOKING_EMAIL}?subject={subject}&body={body}"
 
 
-def _render_step_navigation(step: int) -> None:
+def _render_step_navigation(step: int) -> bool:
+    submitted = False
     left, right = st.columns([1, 1], gap="small")
     with left:
         if step > 1 and st.button("Terug", key=f"{BOOKING_PREFIX}back_{step}", use_container_width=True):
+            st.session_state[f"{BOOKING_PREFIX}mailto"] = ""
             st.session_state[f"{BOOKING_PREFIX}step"] = step - 1
             st.rerun()
 
@@ -421,16 +424,13 @@ def _render_step_navigation(step: int) -> None:
         if step < BOOKING_STEP_COUNT:
             if st.button("Volgende", key=f"{BOOKING_PREFIX}next_{step}", use_container_width=True):
                 st.session_state[f"{BOOKING_PREFIX}errors"] = []
+                st.session_state[f"{BOOKING_PREFIX}mailto"] = ""
                 st.session_state[f"{BOOKING_PREFIX}step"] = step + 1
                 st.rerun()
         else:
             if st.button("Plan mijn test", key=f"{BOOKING_PREFIX}submit", use_container_width=True):
-                errors = _collect_booking_errors()
-                st.session_state[f"{BOOKING_PREFIX}errors"] = errors
-                if errors:
-                    st.error("Je moet akkoord gaan met de algemene voorwaarden om te versturen.")
-                else:
-                    st.session_state[f"{BOOKING_PREFIX}mailto"] = _build_booking_mailto()
+                submitted = True
+    return submitted
 
 
 def _render_plan_form() -> None:
@@ -499,10 +499,6 @@ def _render_plan_form() -> None:
             key=f"{BOOKING_PREFIX}notes",
             height=110,
         )
-        st.checkbox(
-            "Ik ga akkoord met de algemene voorwaarden en heb deze gelezen op de website. *",
-            key=f"{BOOKING_PREFIX}terms",
-        )
     else:
         st.markdown("**Controleer je gegevens**")
         st.markdown(
@@ -530,15 +526,19 @@ def _render_plan_form() -> None:
         )
         st.caption("Na klikken op 'Plan mijn test' openen we je mailapp met alle ingevulde gegevens.")
 
-    _render_step_navigation(step)
+    submitted = _render_step_navigation(step)
+    if step == BOOKING_STEP_COUNT and submitted:
+        errors = _collect_booking_errors()
+        st.session_state[f"{BOOKING_PREFIX}errors"] = errors
+        if errors:
+            st.session_state[f"{BOOKING_PREFIX}mailto"] = ""
+        else:
+            st.session_state[f"{BOOKING_PREFIX}mailto"] = _build_booking_mailto()
+
     mailto_url = str(_booking_value("mailto"))
     if mailto_url:
         st.success("Aanvraag opgesteld. Klik hieronder om de e-mail direct te openen.")
-        st.markdown(f"[Open e-mail naar Folkert]({mailto_url})")
         st.link_button("Open e-mail naar Folkert", mailto_url, use_container_width=True)
-        if st.button("Nieuw formulier", key=f"{BOOKING_PREFIX}reset", use_container_width=True):
-            reset_booking_form()
-            st.rerun()
         if st.button("Popup sluiten", key=f"{BOOKING_PREFIX}close_bottom", use_container_width=True):
             st.session_state[BOOKING_OPEN_KEY] = False
             st.rerun()
@@ -566,7 +566,6 @@ def plan_test_button(
 ) -> None:
     if st.button(label, key=key, use_container_width=use_container_width):
         reset_booking_form()
-        st.session_state[f"{BOOKING_PREFIX}errors"] = []
         st.session_state[BOOKING_OPEN_KEY] = True
         st.session_state[BOOKING_PAGE_KEY] = page_id
         st.rerun()
