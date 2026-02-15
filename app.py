@@ -346,7 +346,9 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-st.page_link("pages/4_Energiesystemen.py", label="Begin je kernbegrippen bij Energiesystemen", width="stretch")
+kp_pad_l, kp_btn_col, kp_pad_r = st.columns([0.18, 0.64, 0.18], gap="small")
+with kp_btn_col:
+    st.link_button("Begin je kernbegrippen bij Energiesystemen", "/Energiesystemen", use_container_width=True)
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)
 st.markdown('<section class="home-section"><h2>Locaties</h2></section>', unsafe_allow_html=True)

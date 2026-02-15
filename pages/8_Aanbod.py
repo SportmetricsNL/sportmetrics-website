@@ -251,9 +251,16 @@ with st.container(border=True):
     st.markdown('<h2 class="offer-section-title">Seizoensstart - tijdelijke actie</h2>', unsafe_allow_html=True)
     price_text_col, bundle_1_col, bundle_2_col = st.columns(3, gap="large")
     with price_text_col:
-        st.markdown("**Enkele test**")
-        st.markdown("<p class='offer-price-big'>100 euro</p>", unsafe_allow_html=True)
-        st.write("Seizoensstart aanbieding")
+        st.markdown(
+            """
+            <article class="offer-price-card">
+              <h3>Enkele test</h3>
+              <p class="offer-price-big">100 euro</p>
+              <p><strong>Seizoensstartkorting</strong> (normaal 150 euro)</p>
+            </article>
+            """,
+            unsafe_allow_html=True,
+        )
     with bundle_1_col:
         st.markdown(
             """

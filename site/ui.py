@@ -213,6 +213,35 @@ def inject_global_css() -> None:
             margin-top: 1rem;
           }
 
+          .sm-instagram-fab {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            z-index: 9998;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.56rem 0.9rem;
+            border-radius: 999px;
+            border: 1px solid #236ad9;
+            background: #236ad9;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            font-weight: 700;
+            font-size: 0.84rem;
+            box-shadow: 0 10px 22px rgba(35, 106, 217, 0.25);
+          }
+
+          .sm-instagram-fab:hover,
+          .sm-instagram-fab:focus,
+          .sm-instagram-fab:active,
+          .sm-instagram-fab:visited {
+            color: #ffffff !important;
+            background: #1f60c6;
+            border-color: #1f60c6;
+            text-decoration: none !important;
+          }
+
           @media (max-width: 1180px) {
             .block-container {
               max-width: 100%;
@@ -257,9 +286,9 @@ def inject_global_css() -> None:
 
 def top_nav(active: str) -> None:
     assets_dir = Path(__file__).resolve().parents[1] / "assets"
-    logo_path = assets_dir / "logo.png"
+    logo_path = assets_dir / "logo-web.png"
     if not logo_path.exists():
-        logo_path = assets_dir / "logo-web.png"
+        logo_path = assets_dir / "logo.png"
     logo_col, nav_col = st.columns([0.14, 0.86], gap="small")
 
     with logo_col:
@@ -289,6 +318,10 @@ def top_nav(active: str) -> None:
                     st.markdown('<div class="sm-nav-row-space"></div>', unsafe_allow_html=True)
 
     st.markdown('<div class="sm-nav-space"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<a class="sm-instagram-fab" href="https://www.instagram.com/sportmetricsnl/" target="_blank" rel="noopener noreferrer">Instagram</a>',
+        unsafe_allow_html=True,
+    )
 
 
 def _booking_defaults() -> dict[str, object]:
@@ -310,7 +343,6 @@ def _booking_defaults() -> dict[str, object]:
         f"{BOOKING_PREFIX}sex": "Man",
         f"{BOOKING_PREFIX}notes": "",
         f"{BOOKING_PREFIX}terms": False,
-        f"{BOOKING_PREFIX}mailto": "",
         f"{BOOKING_PREFIX}errors": [],
     }
 
@@ -330,13 +362,6 @@ def _init_booking_state() -> None:
 
 def _booking_value(name: str) -> object:
     return st.session_state[f"{BOOKING_PREFIX}{name}"]
-
-
-def _collect_booking_errors() -> list[str]:
-    errors: list[str] = []
-    if not bool(_booking_value("terms")):
-        errors.append("Je moet akkoord gaan met de algemene voorwaarden.")
-    return errors
 
 
 def _display_value(value: object, kind: str = "text") -> str:
@@ -411,12 +436,10 @@ def _build_booking_mailto() -> str:
     return f"mailto:{BOOKING_EMAIL}?subject={subject}&body={body}"
 
 
-def _render_step_navigation(step: int) -> bool:
-    submitted = False
+def _render_step_navigation(step: int) -> None:
     left, right = st.columns([1, 1], gap="small")
     with left:
         if step > 1 and st.button("Terug", key=f"{BOOKING_PREFIX}back_{step}", use_container_width=True):
-            st.session_state[f"{BOOKING_PREFIX}mailto"] = ""
             st.session_state[f"{BOOKING_PREFIX}step"] = step - 1
             st.rerun()
 
@@ -424,13 +447,13 @@ def _render_step_navigation(step: int) -> bool:
         if step < BOOKING_STEP_COUNT:
             if st.button("Volgende", key=f"{BOOKING_PREFIX}next_{step}", use_container_width=True):
                 st.session_state[f"{BOOKING_PREFIX}errors"] = []
-                st.session_state[f"{BOOKING_PREFIX}mailto"] = ""
                 st.session_state[f"{BOOKING_PREFIX}step"] = step + 1
                 st.rerun()
         else:
-            if st.button("Plan mijn test", key=f"{BOOKING_PREFIX}submit", use_container_width=True):
-                submitted = True
-    return submitted
+            if bool(_booking_value("terms")):
+                st.link_button("Plan mijn test", _build_booking_mailto(), use_container_width=True)
+            elif st.button("Plan mijn test", key=f"{BOOKING_PREFIX}submit", use_container_width=True):
+                st.session_state[f"{BOOKING_PREFIX}errors"] = ["Je moet akkoord gaan met de algemene voorwaarden."]
 
 
 def _render_plan_form() -> None:
@@ -526,22 +549,7 @@ def _render_plan_form() -> None:
         )
         st.caption("Na klikken op 'Plan mijn test' openen we je mailapp met alle ingevulde gegevens.")
 
-    submitted = _render_step_navigation(step)
-    if step == BOOKING_STEP_COUNT and submitted:
-        errors = _collect_booking_errors()
-        st.session_state[f"{BOOKING_PREFIX}errors"] = errors
-        if errors:
-            st.session_state[f"{BOOKING_PREFIX}mailto"] = ""
-        else:
-            st.session_state[f"{BOOKING_PREFIX}mailto"] = _build_booking_mailto()
-
-    mailto_url = str(_booking_value("mailto"))
-    if mailto_url:
-        st.success("Aanvraag opgesteld. Klik hieronder om de e-mail direct te openen.")
-        st.link_button("Open e-mail naar Folkert", mailto_url, use_container_width=True)
-        if st.button("Popup sluiten", key=f"{BOOKING_PREFIX}close_bottom", use_container_width=True):
-            st.session_state[BOOKING_OPEN_KEY] = False
-            st.rerun()
+    _render_step_navigation(step)
 
 
 if hasattr(st, "dialog"):
