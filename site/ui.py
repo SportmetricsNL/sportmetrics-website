@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
@@ -191,7 +190,7 @@ def inject_global_css() -> None:
           }
 
           .sm-nav-space {
-            height: 0.32rem;
+            height: 0.12rem;
           }
 
           .sm-nav-row-space {
@@ -201,8 +200,9 @@ def inject_global_css() -> None:
           .sm-logo-wrap {
             display: flex;
             justify-content: flex-start;
-            align-items: flex-start;
-            padding-top: 0.1rem;
+            align-items: center;
+            min-height: 100%;
+            padding-top: 0;
           }
 
           .sm-mobile-menu {
@@ -299,8 +299,10 @@ def top_nav(active: str) -> None:
     logo_col, nav_col = st.columns([0.14, 0.86], gap="small")
 
     with logo_col:
+        st.markdown('<div class="sm-logo-wrap">', unsafe_allow_html=True)
         if logo_path.exists():
             st.image(str(logo_path), width=180)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with nav_col:
         if _is_mobile_client():
@@ -347,7 +349,7 @@ def _booking_defaults() -> dict[str, object]:
         f"{BOOKING_PREFIX}phone": "",
         f"{BOOKING_PREFIX}height_cm": 0.0,
         f"{BOOKING_PREFIX}weight_kg": 0.0,
-        f"{BOOKING_PREFIX}birth_date": date(1990, 1, 1),
+        f"{BOOKING_PREFIX}birth_date": "",
         f"{BOOKING_PREFIX}sex": "Man",
         f"{BOOKING_PREFIX}notes": "",
         f"{BOOKING_PREFIX}terms": False,
@@ -383,7 +385,10 @@ def _widget_key(name: str) -> str:
 def _seed_widget(name: str) -> str:
     key = _widget_key(name)
     if key not in st.session_state:
-        st.session_state[key] = _booking_value(name)
+        value = _booking_value(name)
+        if name == "birth_date" and not isinstance(value, str):
+            value = str(value)
+        st.session_state[key] = value
     return key
 
 
@@ -446,7 +451,7 @@ def _build_booking_mailto() -> str:
                 f"Telefoon: {_display_value(phone)}",
                 f"Lengte (cm): {_display_value(height_cm, 'number')}",
                 f"Gewicht (kg): {_display_value(weight_kg, 'number')}",
-                f"Geboortedatum: {birth_date}",
+                f"Geboortedatum: {_display_value(birth_date)}",
                 f"Sekse: {_display_value(sex)}",
                 "",
                 "BLOK 5 - BIJZONDERHEDEN",
@@ -567,7 +572,11 @@ def _render_plan_form() -> None:
         st.session_state[f"{BOOKING_PREFIX}weight_kg"] = weight_kg
     elif step == 3:
         st.markdown("**Aanvullende gegevens**")
-        birth_date = st.date_input("Geboortedatum", key=_seed_widget("birth_date"))
+        birth_date = st.text_input(
+            "Geboortedatum (dd-mm-jjjj)",
+            key=_seed_widget("birth_date"),
+            placeholder="bijv. 14-08-1990",
+        )
         st.session_state[f"{BOOKING_PREFIX}birth_date"] = birth_date
         sex = st.radio("Sekse", ["Man", "Vrouw", "Anders"], key=_seed_widget("sex"), horizontal=True)
         st.session_state[f"{BOOKING_PREFIX}sex"] = sex
@@ -594,7 +603,7 @@ def _render_plan_form() -> None:
             - **Telefoon:** {_display_value(_booking_value("phone"))}
             - **Lengte (cm):** {_display_value(_booking_value("height_cm"), "number")}
             - **Gewicht (kg):** {_display_value(_booking_value("weight_kg"), "number")}
-            - **Geboortedatum:** {_booking_value("birth_date")}
+            - **Geboortedatum:** {_display_value(_booking_value("birth_date"))}
             - **Sekse:** {_display_value(_booking_value("sex"))}
             - **Bijzonderheden:** {_display_value(_booking_value("notes"))}
             """

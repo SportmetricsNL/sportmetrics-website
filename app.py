@@ -60,6 +60,7 @@ st.markdown(
         width: 100vw;
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
+        margin-top: -0.18rem;
         min-height: clamp(430px, 68vh, 760px);
         border-radius: 0 0 28px 28px;
         overflow: hidden;
@@ -212,7 +213,7 @@ st.markdown(
 
       .home-section h2 {{
         margin: 0 0 0.7rem;
-        font-size: 1.34rem;
+        font-size: 1.5rem;
         color: #173f49;
       }}
 
@@ -227,7 +228,7 @@ st.markdown(
       .home-card h3 {{
         margin: 0 0 0.44rem;
         color: #1f4f5a;
-        font-size: 1.05rem;
+        font-size: 1.28rem;
       }}
 
       .home-card p {{
@@ -249,7 +250,7 @@ st.markdown(
       }}
 
       .home-footer {{
-        margin-top: 1.7rem;
+        margin-top: 3rem;
         text-align: center;
         color: #4a6c74;
         font-weight: 600;
@@ -294,6 +295,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+st.markdown("<div style='margin-top:-0.22rem;'></div>", unsafe_allow_html=True)
 hero_pad_l, hero_action_left, hero_action_right, hero_pad_r = st.columns([0.06, 0.44, 0.44, 0.06], gap="small")
 with hero_action_left:
     plan_test_button("Plan je bezoek vandaag nog", key="home_hero_plan", page_id="home", use_container_width=True)
@@ -351,7 +353,7 @@ with kp_btn_col:
     st.link_button("Begin je kernbegrippen bij Energiesystemen", "/Energiesystemen", use_container_width=True)
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)
-st.markdown('<section class="home-section"><h2>Locaties</h2></section>', unsafe_allow_html=True)
+st.markdown('<p class="home-mini-title home-centered">Locaties</p>', unsafe_allow_html=True)
 loc_left, loc_right = st.columns(2, gap="large")
 
 with loc_left:
@@ -388,5 +390,5 @@ with loc_right:
         unsafe_allow_html=True,
     )
 
-st.markdown('<p class="home-footer">We zien je snel bij SportMetrics.</p>', unsafe_allow_html=True)
+st.markdown('<p class="home-footer">We hopen je snel te zien bij SportMetrics.</p>', unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
