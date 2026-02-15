@@ -19,12 +19,10 @@ if "site.ui" not in sys.modules:
     spec.loader.exec_module(module)
     sys.modules["site.ui"] = module
 
-from site.ui import inject_global_css, top_nav
+from site.ui import inject_global_css, plan_test_button, top_nav
 
 inject_global_css()
 top_nav(active="Aanbod")
-
-CTA_URL = "mailto:folkertvinke@gmail.com"
 
 st.markdown(
     """
@@ -57,30 +55,6 @@ st.markdown(
         display: flex;
         flex-wrap: wrap;
         gap: 0.7rem;
-      }
-
-      .offer-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.72rem 1.2rem;
-        border-radius: 999px;
-        border: 1px solid #c9d9dd;
-        text-decoration: none !important;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-      }
-
-      .offer-btn-primary {
-        background: linear-gradient(140deg, #2d7c85 0%, #3d9199 100%);
-        border-color: #2d7c85;
-        color: #ffffff !important;
-        box-shadow: 0 10px 22px rgba(22, 74, 87, 0.22);
-      }
-
-      .offer-btn-secondary {
-        background: #ffffff;
-        color: #245e67 !important;
       }
 
       .offer-section {
@@ -245,11 +219,6 @@ st.markdown(
         font-size: 1.26rem;
       }
 
-      .offer-plan .offer-btn-primary {
-        width: fit-content;
-        margin-top: 0.85rem;
-      }
-
       @media (max-width: 900px) {
         .offer-section {
           padding: 0.95rem;
@@ -261,10 +230,6 @@ st.markdown(
           grid-template-columns: 1fr;
         }
 
-        .offer-hero-actions .offer-btn,
-        .offer-plan .offer-btn-primary {
-          width: 100%;
-        }
       }
     </style>
     """,
@@ -272,18 +237,20 @@ st.markdown(
 )
 
 st.markdown(
-    f"""
+    """
     <section class="offer-hero">
       <h1>Train dit seizoen op jouw fysiologie.</h1>
       <p>Start met een basismeting op je eigen fiets. Geen schattingen, maar duidelijke zones en drempels die direct toepasbaar zijn op je training.</p>
-      <div class="offer-hero-actions">
-        <a class="offer-btn offer-btn-primary" href="{CTA_URL}">Plan je meting</a>
-        <a class="offer-btn offer-btn-secondary" href="/Methode">Bekijk Kernbegrippen</a>
-      </div>
     </section>
     """,
     unsafe_allow_html=True,
 )
+
+offer_hero_left, offer_hero_right = st.columns(2, gap="small")
+with offer_hero_left:
+    st.link_button("Bekijk Kernbegrippen", "/Methode", use_container_width=True)
+with offer_hero_right:
+    plan_test_button("Plan je meting", key="offer_hero_plan", use_container_width=True)
 
 st.markdown(
     """
@@ -477,11 +444,11 @@ st.markdown(
 )
 
 st.markdown(
-    f"""
+    """
     <section class="offer-plan">
       <h2>Plan je meting</h2>
-      <a class="offer-btn offer-btn-primary" href="{CTA_URL}">Plan je meting</a>
     </section>
     """,
     unsafe_allow_html=True,
 )
+plan_test_button("Plan je meting", key="offer_bottom_plan", use_container_width=True)

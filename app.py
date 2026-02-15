@@ -21,7 +21,7 @@ if "site.ui" not in sys.modules:
     spec.loader.exec_module(module)
     sys.modules["site.ui"] = module
 
-from site.ui import inject_global_css, top_nav
+from site.ui import inject_global_css, plan_test_button, top_nav
 
 inject_global_css()
 top_nav(active="Home")
@@ -51,8 +51,6 @@ if not logo_path.exists():
 
 hero_uri = file_to_data_uri(hero_path)
 logo_uri = file_to_data_uri(logo_path)
-
-CTA_URL = "mailto:folkertvinke@gmail.com"
 
 st.markdown(
     f"""
@@ -190,12 +188,21 @@ st.markdown(
         display: inline-block;
         padding: 0.22rem 0.56rem;
         border-radius: 999px;
-        border: 1px solid #b8d1d7;
-        background: #eef6f8;
-        color: #275d67 !important;
+        border: 1px solid #236ad9;
+        background: #236ad9;
+        color: #ffffff !important;
         text-decoration: none !important;
         font-weight: 700;
         font-size: 0.82rem;
+      }}
+
+      .home-ai-inline:hover,
+      .home-ai-inline:focus,
+      .home-ai-inline:active,
+      .home-ai-inline:visited {{
+        background: #1f60c6;
+        border-color: #1f60c6;
+        color: #ffffff !important;
       }}
 
       .home-section {{
@@ -284,8 +291,6 @@ st.markdown(
           <p class="home-copy">Ontdek de inspanningstesten van SportMetrics. Opgezet voor alle sporters die meer willen weten over hun eigen kunnen en waar hun grenzen liggen.</p>
           <p class="home-copy">Maak dit fietsjaar jouw jaar met jouw data!</p>
           <p class="home-copy">Wetenschappelijk onderbouwd, persoonlijk en professioneel uitgevoerd.</p>
-          <a class="home-cta" href="{CTA_URL}">Plan je bezoek vandaag nog</a>
-          <a class="home-cta home-cta-alt" href="/Aanbod">Meer weten? Klik hier</a>
         </div>
       </div>
     </section>
@@ -293,11 +298,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+hero_action_left, hero_action_right = st.columns(2, gap="small")
+with hero_action_left:
+    plan_test_button("Plan je bezoek vandaag nog", key="home_hero_plan", use_container_width=True)
+with hero_action_right:
+    st.link_button("Meer weten? Klik hier", "/Aanbod", use_container_width=True)
+
 st.markdown('<div class="home-content">', unsafe_allow_html=True)
 
 st.markdown('<p class="home-mini-title home-centered">Diensten</p>', unsafe_allow_html=True)
 st.markdown(
-    f"""
+    """
     <article class="home-card">
       <h3>Inspanningstesten, meten is weten</h3>
       <p>Ontdek jouw VO2max, je metabole profiel en je energieverdeling via wetenschappelijk onderbouwde inspanningstesten voor fietsers die gericht willen trainen en progressie inzichtelijk willen maken.</p>
@@ -308,11 +319,11 @@ st.markdown(
         <li>Nog meer (zie Aanbod)</li>
         <li><a class="home-ai-inline" href="/Mijn_SportTesting_AI">AI-coach</a></li>
       </ul>
-      <a class="home-cta" href="{CTA_URL}">Klik hier voor je afspraak</a>
     </article>
     """,
     unsafe_allow_html=True,
 )
+plan_test_button("Klik hier voor je afspraak", key="home_services_plan", use_container_width=True)
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)
 st.markdown(
@@ -337,11 +348,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-st.markdown(
-    f'<a class="home-cta" href="{CTA_URL}">Klaar met op gevoel fietsen en wil jij jouw lichaam kennen onder prestatie? Maak nu je afspraak!</a>',
-    unsafe_allow_html=True,
-)
-
 st.page_link("pages/4_Energiesystemen.py", label="Begin je kernbegrippen bij Energiesystemen", width="stretch")
 
 st.markdown('<div class="home-vspace"></div>', unsafe_allow_html=True)

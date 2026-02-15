@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
+from urllib.parse import quote
 
 import streamlit as st
 
@@ -16,6 +18,10 @@ NAV_ITEMS = [
     ("Critical Power", "pages/6_Critical_Power.py"),
     ("Mijn SportTesting AI", "pages/7_Mijn_SportTesting_AI.py"),
 ]
+
+BOOKING_EMAIL = "folkertvinke@gmail.com"
+BOOKING_STEP_COUNT = 4
+BOOKING_PREFIX = "sm_booking_"
 
 
 def _is_mobile_client() -> bool:
@@ -42,6 +48,9 @@ def inject_global_css() -> None:
             --sm-accent-soft: #e3eff1;
             --sm-border: #d6e1e4;
             --sm-shadow: 0 12px 30px rgba(23, 67, 82, 0.1);
+            --sm-cta-blue: #236ad9;
+            --sm-cta-blue-hover: #1f60c6;
+            --sm-cta-blue-active: #194fa8;
           }
 
           html, body, [class*="st-"] {
@@ -124,6 +133,39 @@ def inject_global_css() -> None:
             pointer-events: none;
           }
 
+          div[data-testid="stButton"] > button,
+          div[data-testid="stFormSubmitButton"] > button,
+          div[data-testid="stLinkButton"] > a {
+            border-radius: 999px !important;
+            border: 1px solid var(--sm-cta-blue) !important;
+            background: var(--sm-cta-blue) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+            box-shadow: 0 10px 22px rgba(35, 106, 217, 0.25);
+            transition: all 0.15s ease;
+          }
+
+          div[data-testid="stButton"] > button:hover,
+          div[data-testid="stFormSubmitButton"] > button:hover,
+          div[data-testid="stLinkButton"] > a:hover {
+            background: var(--sm-cta-blue-hover) !important;
+            border-color: var(--sm-cta-blue-hover) !important;
+            color: #ffffff !important;
+          }
+
+          div[data-testid="stButton"] > button:focus-visible,
+          div[data-testid="stButton"] > button:active,
+          div[data-testid="stFormSubmitButton"] > button:focus-visible,
+          div[data-testid="stFormSubmitButton"] > button:active,
+          div[data-testid="stLinkButton"] > a:focus-visible,
+          div[data-testid="stLinkButton"] > a:active {
+            background: var(--sm-cta-blue-active) !important;
+            border-color: var(--sm-cta-blue-active) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 2px rgba(25, 79, 168, 0.22) !important;
+          }
+
           .sm-nav-space {
             height: 0.32rem;
           }
@@ -141,6 +183,10 @@ def inject_global_css() -> None:
 
           .sm-mobile-menu {
             margin-top: 0.2rem;
+          }
+
+          .sm-inline-buttons {
+            margin-top: 1rem;
           }
 
           @media (max-width: 1180px) {
@@ -219,3 +265,262 @@ def top_nav(active: str) -> None:
                     st.markdown('<div class="sm-nav-row-space"></div>', unsafe_allow_html=True)
 
     st.markdown('<div class="sm-nav-space"></div>', unsafe_allow_html=True)
+
+
+def _booking_defaults() -> dict[str, object]:
+    return {
+        f"{BOOKING_PREFIX}step": 1,
+        f"{BOOKING_PREFIX}test_type": "Zone & Drempel Test (Step)",
+        f"{BOOKING_PREFIX}goal": "",
+        f"{BOOKING_PREFIX}ftp": "",
+        f"{BOOKING_PREFIX}performance_level": "",
+        f"{BOOKING_PREFIX}rides_per_week": "",
+        f"{BOOKING_PREFIX}hours_per_week": 0.0,
+        f"{BOOKING_PREFIX}axle_type": "",
+        f"{BOOKING_PREFIX}name": "",
+        f"{BOOKING_PREFIX}email": "",
+        f"{BOOKING_PREFIX}phone": "",
+        f"{BOOKING_PREFIX}height_cm": 0.0,
+        f"{BOOKING_PREFIX}weight_kg": 0.0,
+        f"{BOOKING_PREFIX}birth_date": date(1990, 1, 1),
+        f"{BOOKING_PREFIX}sex": "Man",
+        f"{BOOKING_PREFIX}notes": "",
+        f"{BOOKING_PREFIX}terms": False,
+        f"{BOOKING_PREFIX}mailto": "",
+    }
+
+
+def reset_booking_form() -> None:
+    for key, value in _booking_defaults().items():
+        st.session_state[key] = value
+
+
+def _init_booking_state() -> None:
+    defaults = _booking_defaults()
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+
+
+def _booking_value(name: str) -> object:
+    return st.session_state[f"{BOOKING_PREFIX}{name}"]
+
+
+def _validate_booking_step(step: int) -> bool:
+    errors: list[str] = []
+    if step == 1:
+        if not str(_booking_value("goal")).strip():
+            errors.append("Vul het doel van je test in.")
+        if not str(_booking_value("rides_per_week")).strip():
+            errors.append("Kies hoe vaak je per week fietst.")
+        if float(_booking_value("hours_per_week")) <= 0:
+            errors.append("Vul het aantal trainingsuren per week in.")
+        ftp = str(_booking_value("ftp")).strip()
+        level = str(_booking_value("performance_level")).strip()
+        if not ftp and not level:
+            errors.append("Vul FTP in of omschrijf kort je huidige niveau.")
+    elif step == 2:
+        if not str(_booking_value("axle_type")).strip():
+            errors.append("Kies het type achteras.")
+        if not str(_booking_value("name")).strip():
+            errors.append("Vul je naam in.")
+        email = str(_booking_value("email")).strip()
+        if "@" not in email or "." not in email:
+            errors.append("Vul een geldig e-mailadres in.")
+        if not str(_booking_value("phone")).strip():
+            errors.append("Vul je telefoonnummer in.")
+        if float(_booking_value("height_cm")) <= 0:
+            errors.append("Vul je lengte in centimeters in.")
+        if float(_booking_value("weight_kg")) <= 0:
+            errors.append("Vul je gewicht in kilogram in.")
+    elif step == 3:
+        if not bool(_booking_value("terms")):
+            errors.append("Je moet akkoord gaan met de algemene voorwaarden.")
+
+    for error in errors:
+        st.error(error)
+    return not errors
+
+
+def _build_booking_mailto() -> str:
+    test_type = _booking_value("test_type")
+    goal = _booking_value("goal")
+    ftp = _booking_value("ftp")
+    performance_level = _booking_value("performance_level")
+    rides_per_week = _booking_value("rides_per_week")
+    hours_per_week = _booking_value("hours_per_week")
+    axle_type = _booking_value("axle_type")
+    name = _booking_value("name")
+    email = _booking_value("email")
+    phone = _booking_value("phone")
+    height_cm = _booking_value("height_cm")
+    weight_kg = _booking_value("weight_kg")
+    birth_date = _booking_value("birth_date")
+    sex = _booking_value("sex")
+    notes = _booking_value("notes")
+
+    subject = quote(f"Nieuwe testaanvraag: {name}")
+    body = quote(
+        "\n".join(
+            [
+                "Nieuwe testaanvraag via SportMetrics website",
+                "",
+                "BLOK 1 - TESTKEUZE",
+                f"Type test: {test_type}",
+                "",
+                "BLOK 2 - DOEL & TRAININGSACHTERGROND",
+                f"Doel test: {goal}",
+                f"FTP: {ftp if str(ftp).strip() else 'Niet ingevuld'}",
+                f"Huidig niveau: {performance_level if str(performance_level).strip() else 'Niet ingevuld'}",
+                f"Hoe vaak per week: {rides_per_week}",
+                f"Uur per week: {hours_per_week}",
+                "",
+                "BLOK 3 - FIETSINFORMATIE",
+                f"Type achteras: {axle_type}",
+                "",
+                "BLOK 4 - PERSOONSGEGEVENS",
+                f"Naam: {name}",
+                f"E-mail: {email}",
+                f"Telefoon: {phone}",
+                f"Lengte (cm): {height_cm}",
+                f"Gewicht (kg): {weight_kg}",
+                f"Geboortedatum: {birth_date}",
+                f"Sekse: {sex}",
+                "",
+                "BLOK 5 - BIJZONDERHEDEN",
+                f"Opmerkingen/vragen/medisch: {notes if str(notes).strip() else 'Geen'}",
+                "",
+                "BLOK 6 - VOORWAARDEN",
+                "Akkoord met voorwaarden: Ja",
+            ]
+        )
+    )
+    return f"mailto:{BOOKING_EMAIL}?subject={subject}&body={body}"
+
+
+def _render_step_navigation(step: int) -> None:
+    left, right = st.columns([1, 1], gap="small")
+    with left:
+        if step > 1 and st.button("Terug", key=f"{BOOKING_PREFIX}back_{step}", use_container_width=True):
+            st.session_state[f"{BOOKING_PREFIX}step"] = step - 1
+            st.rerun()
+
+    with right:
+        if step < BOOKING_STEP_COUNT:
+            if st.button("Volgende", key=f"{BOOKING_PREFIX}next_{step}", use_container_width=True):
+                if _validate_booking_step(step):
+                    st.session_state[f"{BOOKING_PREFIX}step"] = step + 1
+                    st.rerun()
+        else:
+            if st.button("Plan mijn test", key=f"{BOOKING_PREFIX}submit", use_container_width=True):
+                all_valid = _validate_booking_step(1) and _validate_booking_step(2) and _validate_booking_step(3)
+                if all_valid:
+                    st.session_state[f"{BOOKING_PREFIX}mailto"] = _build_booking_mailto()
+
+
+def _render_plan_form() -> None:
+    _init_booking_state()
+    step = int(_booking_value("step"))
+    st.caption(f"Stap {step} van {BOOKING_STEP_COUNT}")
+    st.progress(step / BOOKING_STEP_COUNT)
+
+    if step == 1:
+        st.markdown("**Blok 1 - Testkeuze**")
+        st.radio(
+            "Welk type test wil je plannen?",
+            [
+                "Zone & Drempel Test (Step)",
+                "Max & Performance Test (Ramp)",
+                "Duurgrens Test (VT1)",
+                "Critical Power Testpakket (3 momenten)",
+            ],
+            key=f"{BOOKING_PREFIX}test_type",
+        )
+        st.markdown("**Blok 2 - Doel & trainingsachtergrond**")
+        st.text_area("Wat is het doel van je test? *", key=f"{BOOKING_PREFIX}goal", height=90)
+        st.text_input("FTP (optioneel)", key=f"{BOOKING_PREFIX}ftp")
+        st.text_area("Of omschrijf kort je huidige niveau", key=f"{BOOKING_PREFIX}performance_level", height=70)
+        st.selectbox(
+            "Hoe vaak fiets je per week? *",
+            ["", "1-2 keer", "3-4 keer", "5+ keer"],
+            format_func=lambda x: "Kies een optie" if x == "" else x,
+            key=f"{BOOKING_PREFIX}rides_per_week",
+        )
+        st.number_input(
+            "Hoeveel uur per week? *",
+            min_value=0.0,
+            step=0.5,
+            key=f"{BOOKING_PREFIX}hours_per_week",
+        )
+    elif step == 2:
+        st.markdown("**Blok 3 - Fietsinformatie**")
+        st.selectbox(
+            "Type achteras *",
+            ["", "Quick release (wiel los met draaiklem)", "Through axle (as los met inbus)"],
+            format_func=lambda x: "Kies een optie" if x == "" else x,
+            key=f"{BOOKING_PREFIX}axle_type",
+        )
+        st.markdown("**Blok 4 - Persoonsgegevens**")
+        st.text_input("Naam *", key=f"{BOOKING_PREFIX}name")
+        st.text_input("E-mailadres *", key=f"{BOOKING_PREFIX}email")
+        st.text_input("Telefoonnummer *", key=f"{BOOKING_PREFIX}phone")
+        st.number_input("Lengte (cm) *", min_value=0.0, step=1.0, key=f"{BOOKING_PREFIX}height_cm")
+        st.number_input("Gewicht (kg) *", min_value=0.0, step=0.1, key=f"{BOOKING_PREFIX}weight_kg")
+    elif step == 3:
+        st.markdown("**Aanvullende gegevens**")
+        st.date_input("Geboortedatum", key=f"{BOOKING_PREFIX}birth_date")
+        st.radio("Sekse", ["Man", "Vrouw", "Anders"], key=f"{BOOKING_PREFIX}sex", horizontal=True)
+        st.text_area(
+            "Opmerkingen / vragen / medische bijzonderheden",
+            key=f"{BOOKING_PREFIX}notes",
+            height=110,
+        )
+        st.checkbox(
+            "Ik ga akkoord met de algemene voorwaarden en heb deze gelezen op de website. *",
+            key=f"{BOOKING_PREFIX}terms",
+        )
+    else:
+        st.markdown("**Controleer je gegevens**")
+        st.markdown(
+            f"""
+            - **Type test:** {_booking_value("test_type")}
+            - **Doel:** {_booking_value("goal")}
+            - **Naam:** {_booking_value("name")}
+            - **E-mail:** {_booking_value("email")}
+            - **Telefoon:** {_booking_value("phone")}
+            - **Type achteras:** {_booking_value("axle_type")}
+            """
+        )
+        st.caption("Na klikken op 'Plan mijn test' openen we je mailapp met alle ingevulde gegevens.")
+
+    _render_step_navigation(step)
+    mailto_url = str(_booking_value("mailto"))
+    if mailto_url:
+        st.success("Aanvraag opgesteld. Klik hieronder om de e-mail direct te openen.")
+        st.link_button("Open e-mail naar Folkert", mailto_url, use_container_width=True)
+        if st.button("Nieuw formulier", key=f"{BOOKING_PREFIX}reset", use_container_width=True):
+            reset_booking_form()
+            st.rerun()
+
+
+if hasattr(st, "dialog"):
+
+    @st.dialog("Plan je test")
+    def _open_plan_dialog() -> None:
+        _render_plan_form()
+
+else:
+
+    def _open_plan_dialog() -> None:
+        st.warning("Popup wordt niet ondersteund in deze Streamlit-versie.")
+        _render_plan_form()
+
+
+def plan_test_button(
+    label: str = "Plan je meting",
+    *,
+    key: str,
+    use_container_width: bool = False,
+) -> None:
+    if st.button(label, key=key, use_container_width=use_container_width):
+        reset_booking_form()
+        _open_plan_dialog()

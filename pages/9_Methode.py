@@ -19,52 +19,58 @@ if "site.ui" not in sys.modules:
     spec.loader.exec_module(module)
     sys.modules["site.ui"] = module
 
-from site.ui import inject_global_css, top_nav
+from site.ui import inject_global_css, plan_test_button, top_nav
 
 inject_global_css()
 top_nav(active="Methode")
-
-CTA_URL = "mailto:folkertvinke@gmail.com"
 
 st.markdown(
     """
     <style>
       .method-hero {
-        margin-top: 0.2rem;
-        padding: 1.2rem 1.25rem;
+        margin-top: 0.35rem;
+        padding: clamp(2.2rem, 4.2vw, 3.2rem) clamp(1.2rem, 2.8vw, 2rem);
         border-radius: 1.1rem;
-        border: 1px solid #d5e2e7;
-        background: linear-gradient(140deg, #f5fafb 0%, #e6f1f3 100%);
-        box-shadow: 0 14px 26px rgba(18, 62, 74, 0.08);
+        border: 1px solid #d5e2e6;
+        background: linear-gradient(140deg, #f7fbfc 0%, #e9f3f5 100%);
+        box-shadow: 0 14px 30px rgba(18, 62, 74, 0.08);
       }
 
       .method-hero h1 {
         margin: 0;
-        color: #194751;
-        font-size: clamp(1.75rem, 3.1vw, 2.5rem);
+        font-size: clamp(2rem, 4.3vw, 2.95rem);
+        color: #153f48;
+        line-height: 1.04;
       }
 
       .method-hero p {
-        margin: 0.55rem 0 0;
-        color: #2e5f69;
+        margin: 0.82rem 0 0;
+        max-width: 48ch;
+        color: #2b5d66;
+        line-height: 1.6;
       }
 
       .method-section {
-        margin-top: 1.2rem;
-        padding: 1.15rem;
+        margin-top: 1.5rem;
+        padding: 1.2rem;
         border-radius: 1rem;
         border: 1px solid #d5e2e6;
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 10px 22px rgba(21, 65, 77, 0.07);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 24px rgba(21, 65, 77, 0.07);
       }
 
       .method-section h2 {
         margin: 0;
         color: #1f505a;
-        font-size: 1.28rem;
+        font-size: 1.3rem;
       }
 
-      .method-card {
+      .method-sub {
+        margin: 0.44rem 0 0;
+        color: #5a747d;
+      }
+
+      .method-step {
         height: 100%;
         padding: 1rem;
         border-radius: 0.92rem;
@@ -72,41 +78,76 @@ st.markdown(
         background: #ffffff;
       }
 
-      .method-card h3 {
+      .method-step h3 {
         margin: 0;
-        color: #205561;
-        font-size: 1.05rem;
+        color: #215763;
+        font-size: 1.06rem;
       }
 
-      .method-card p {
-        margin: 0.55rem 0 0;
+      .method-step p {
+        margin: 0.46rem 0 0;
         color: #315a65;
-        line-height: 1.58;
+        line-height: 1.55;
       }
 
-      .method-note {
-        margin-top: 0.95rem;
-        padding: 0.95rem 1rem;
-        border-radius: 0.9rem;
-        border: 1px dashed #acc5cc;
-        background: #eef6f7;
-        color: #2e5861;
-        line-height: 1.6;
+      .method-list {
+        margin: 0.52rem 0 0;
+        padding-left: 1rem;
       }
 
-      .method-cta {
-        margin-top: 0.8rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.72rem 1.2rem;
-        border-radius: 999px;
-        background: linear-gradient(140deg, #2d7c85 0%, #3d9199 100%);
-        color: #ffffff !important;
-        text-decoration: none !important;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        box-shadow: 0 10px 22px rgba(22, 74, 87, 0.22);
+      .method-list li {
+        margin: 0.26rem 0;
+        color: #315a65;
+      }
+
+      .method-info {
+        margin-top: 0.92rem;
+        padding: 0.82rem 0.92rem;
+        border-radius: 0.85rem;
+        border: 1px solid #d8e6ea;
+        background: #f3f9fa;
+        color: #315a65;
+        line-height: 1.54;
+      }
+
+      .method-link-note {
+        margin-top: 0.56rem;
+        color: #678089;
+        font-size: 0.88rem;
+      }
+
+      .method-mini {
+        height: 100%;
+        padding: 0.88rem;
+        border-radius: 0.86rem;
+        border: 1px solid #d8e4e8;
+        background: #ffffff;
+      }
+
+      .method-mini h3 {
+        margin: 0;
+        color: #1f505a;
+        font-size: 0.97rem;
+      }
+
+      .method-mini ul {
+        margin: 0.5rem 0 0;
+        padding-left: 1rem;
+      }
+
+      .method-mini li {
+        margin: 0.2rem 0;
+        color: #315a65;
+        font-size: 0.92rem;
+      }
+
+      .method-compact {
+        margin-top: 0.9rem;
+        padding: 0.86rem 0.96rem;
+        border-radius: 0.86rem;
+        border: 1px solid #d8e6ea;
+        background: #f2f8f9;
+        color: #315a65;
       }
 
       .method-footer {
@@ -123,88 +164,245 @@ st.markdown(
 st.markdown(
     """
     <section class="method-hero">
-      <h1>Methode</h1>
-      <p>Van testafname naar praktische trainingssturing. Je werkt met duidelijke kernconcepten en vertaalt data naar concrete keuzes.</p>
+      <h1>Zo meten we jouw fysiologie.</h1>
+      <p>Geen schattingen, maar een gestructureerde inspanningstest die direct vertaald wordt naar bruikbare trainingszones.</p>
     </section>
     """,
     unsafe_allow_html=True,
 )
 
-st.markdown('<section class="method-section"><h2>Zo werkt de methode</h2></section>', unsafe_allow_html=True)
-step_a, step_b, step_c = st.columns(3, gap="large")
+hero_left, hero_right = st.columns(2, gap="small")
+with hero_left:
+    st.link_button("Bekijk Aanbod", "/Aanbod", use_container_width=True)
+with hero_right:
+    plan_test_button("Plan je meting", key="method_hero_plan", use_container_width=True)
 
-with step_a:
+st.markdown(
+    """
+    <section class="method-section">
+      <h2>Hoe werkt het?</h2>
+      <p class="method-sub">Drie stappen: meten, begrijpen, toepassen.</p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+step_1, step_2, step_3 = st.columns(3, gap="large")
+
+with step_1:
     st.markdown(
         """
-        <article class="method-card">
+        <article class="method-step">
           <h3>1. Meten</h3>
-          <p>We bepalen jouw VO2max, drempelwaardes, energieverdeling en zones met een wetenschappelijk onderbouwde inspanningstest.</p>
+          <p>We testen op jouw eigen fiets en setup.</p>
+          <ul class="method-list">
+            <li>Zone &amp; Drempel Test (Step)</li>
+            <li>Max &amp; Performance Test (Ramp)</li>
+          </ul>
+          <p><strong>Wat meten we</strong></p>
+          <ul class="method-list">
+            <li>VO2peak</li>
+            <li>VT1 (duurgrens)</li>
+            <li>VT2 (drempelgebied)</li>
+            <li>Vermogen (watt) en hartslag</li>
+            <li>Ademprofiel (VE = Rf x Tv)</li>
+          </ul>
         </article>
         """,
         unsafe_allow_html=True,
     )
 
-with step_b:
+with step_2:
     st.markdown(
         """
-        <article class="method-card">
+        <article class="method-step">
           <h3>2. Begrijpen</h3>
-          <p>Je rapport vertaalt je resultaten naar duidelijke inzichten over trainingsintensiteit, opbouw en herstelmomenten.</p>
+          <p>Je krijgt een helder PDF-rapport met:</p>
+          <ul class="method-list">
+            <li>Trainingszones in watt en hartslag</li>
+            <li>VT1 en VT2 als concrete stuurpunten</li>
+            <li>Inzicht in waar jouw trainingswinst ligt</li>
+          </ul>
+          <p class="method-link-note">Wil je extra uitleg over terminologie? <a href="/Energiesystemen">Bekijk Kernbegrippen</a>.</p>
         </article>
         """,
         unsafe_allow_html=True,
     )
 
-with step_c:
+with step_3:
     st.markdown(
         """
-        <article class="method-card">
+        <article class="method-step">
           <h3>3. Toepassen</h3>
-          <p>Met de AI-coach en de kernbegrippen bovenin kun je de uitkomsten direct toepassen op je eigen situatie.</p>
+          <p>De uitkomsten gebruik je direct voor:</p>
+          <ul class="method-list">
+            <li>Duurtraining rond VT1</li>
+            <li>Drempeltraining rond VT2</li>
+            <li>VO2-ontwikkeling</li>
+            <li>Pacing bij klimmen en tijdritten</li>
+            <li>Na <strong>6-8 weken</strong>: hertest en zones bijstellen</li>
+          </ul>
         </article>
         """,
         unsafe_allow_html=True,
     )
 
-st.markdown('<section class="method-section"><h2>Kernbegrippen interactief</h2></section>', unsafe_allow_html=True)
 st.markdown(
     """
-    <div class="method-note">
-      Start hier jouw leerproces. De kernbegrippen bovenin zijn interactief uitgelegd, zodat je ze kunt toepassen op je eigen situatie.
-      Loop alle kernconcepten door voor een volledig beeld van je testresultaten en trainingssturing.
-    </div>
+    <article class="method-info">
+      <strong>Ademprofiel uitgelegd</strong><br/>
+      Ventilatie (VE) is de hoeveelheid lucht per minuut. VE bestaat uit ademfrequentie (Rf) en teugvolume (Tv): VE = Rf x Tv.
+      Dit laat zien hoe jouw ademhaling opschaalt bij toenemende intensiteit en helpt bij interpretatie en pacing.
+    </article>
     """,
     unsafe_allow_html=True,
 )
 
-core_row_1 = st.columns(3, gap="large")
-with core_row_1[0]:
-    st.page_link("pages/1_VO2max.py", label="VO2max", width="stretch")
-with core_row_1[1]:
-    st.page_link("pages/2_VT1.py", label="VT1", width="stretch")
-with core_row_1[2]:
-    st.page_link("pages/3_VT2.py", label="VT2", width="stretch")
-
-core_row_2 = st.columns(3, gap="large")
-with core_row_2[0]:
-    st.page_link("pages/4_Energiesystemen.py", label="Energiesystemen", width="stretch")
-with core_row_2[1]:
-    st.page_link("pages/5_Zonemodellen.py", label="Zonemodellen", width="stretch")
-with core_row_2[2]:
-    st.page_link("pages/6_Critical_Power.py", label="Critical Power", width="stretch")
-
-st.markdown('<section class="method-section"><h2>AI-chatbot ondersteuning</h2></section>', unsafe_allow_html=True)
 st.markdown(
     """
-    <div class="method-note">
-      Wil je alsnog een vraag stellen? Dan kun je altijd terecht bij de AI-chatbot rechtsboven.
-      De chatbot is getraind op recente literatuur en helpt je met trainingsinrichting, periodisering en het interpreteren van zones.
-      Ook nadat je je eigen rapport hebt geupload, helpt hij je graag verder in jouw fietstraject.
-    </div>
+    <section class="method-section">
+      <h2>Voorbereiding op de test</h2>
+      <p class="method-sub">Een goede voorbereiding zorgt voor betrouwbare drempels en een representatieve VO2peak.</p>
+    </section>
     """,
     unsafe_allow_html=True,
 )
 
-st.page_link("pages/4_Energiesystemen.py", label="Start met Energiesystemen", width="stretch")
-st.markdown(f'<a class="method-cta" href="{CTA_URL}">Klik hier voor je afspraak</a>', unsafe_allow_html=True)
+prep_a, prep_b, prep_c = st.columns(3, gap="large")
+with prep_a:
+    st.markdown(
+        """
+        <article class="method-mini">
+          <h3>24 uur vooraf</h3>
+          <ul>
+            <li>Geen zware training</li>
+            <li>Geen alcohol</li>
+            <li>Normaal eten</li>
+            <li>Goed slapen</li>
+          </ul>
+        </article>
+        """,
+        unsafe_allow_html=True,
+    )
+with prep_b:
+    st.markdown(
+        """
+        <article class="method-mini">
+          <h3>3-6 uur vooraf</h3>
+          <ul>
+            <li>Geen cafeine (of consistent houden)</li>
+            <li>Grote maaltijd 2-3 uur vooraf</li>
+          </ul>
+        </article>
+        """,
+        unsafe_allow_html=True,
+    )
+with prep_c:
+    st.markdown(
+        """
+        <article class="method-mini">
+          <h3>Op de dag zelf</h3>
+          <ul>
+            <li>Drink normaal</li>
+            <li>Meld medische bijzonderheden</li>
+            <li>Gebruik medicatie zoals normaal</li>
+          </ul>
+        </article>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.markdown(
+    """
+    <section class="method-section" style="padding:0.95rem;">
+      <h2>Checklist testafname (interne kwaliteit)</h2>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+with st.expander("Toon checklist", expanded=False):
+    qa_a, qa_b, qa_c = st.columns(3, gap="large")
+    with qa_a:
+        st.markdown(
+            """
+            <article class="method-mini">
+              <h3>Voor start</h3>
+              <ul>
+                <li>Gezondheidscheck en testdoel</li>
+                <li>Masker lekcontrole</li>
+                <li>Hartslagband correct</li>
+                <li>Protocolkeuze bevestigd</li>
+              </ul>
+            </article>
+            """,
+            unsafe_allow_html=True,
+        )
+    with qa_b:
+        st.markdown(
+            """
+            <article class="method-mini">
+              <h3>Tijdens test</h3>
+              <ul>
+                <li>Cadans stabiel</li>
+                <li>Geen praten</li>
+                <li>Houding constant</li>
+                <li>Bijzonderheden noteren</li>
+              </ul>
+            </article>
+            """,
+            unsafe_allow_html=True,
+        )
+    with qa_c:
+        st.markdown(
+            """
+            <article class="method-mini">
+              <h3>Na test</h3>
+              <ul>
+                <li>Controle maximale inspanning</li>
+                <li>Drempels valideren</li>
+                <li>Rapport en advies opstellen</li>
+              </ul>
+            </article>
+            """,
+            unsafe_allow_html=True,
+        )
+
+st.markdown(
+    """
+    <section class="method-section">
+      <h2>Submaximale mogelijkheid</h2>
+      <article class="method-compact">
+        Indien nodig kan de Zone &amp; Drempel Test submaximaal worden uitgevoerd, bijvoorbeeld bij hart- of longproblematiek.
+        We stemmen de opbouw veilig af op jouw situatie.
+      </article>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <section class="method-section">
+      <h2>Wat je krijgt na afloop</h2>
+      <ul class="method-list">
+        <li>Helder PDF-rapport</li>
+        <li>Persoonlijke nabespreking</li>
+        <li>Advies bij het formuleren van doelen</li>
+        <li>Toegang tot de inspanningsfysiologie AI-tool</li>
+      </ul>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <section class="method-section">
+      <h2>Plan je meting</h2>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+plan_test_button("Plan je meting", key="method_bottom_plan", use_container_width=True)
+
 st.markdown('<p class="method-footer">We zien je snel bij SportMetrics.</p>', unsafe_allow_html=True)
