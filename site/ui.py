@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from pathlib import Path
 from urllib.parse import quote
 
@@ -202,13 +203,16 @@ def inject_global_css() -> None:
             justify-content: flex-start;
             align-items: flex-start;
             min-height: 100%;
-            padding-top: 0.16rem;
+            padding-top: 0;
           }
 
-          @media (min-width: 901px) {
-            .sm-logo-wrap img {
-              transform: translateY(-50%);
-            }
+          .sm-nav-logo {
+            width: 180px;
+            height: auto;
+            display: block;
+            transform: translateY(-46%);
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
           }
 
           .sm-mobile-menu {
@@ -290,11 +294,23 @@ def inject_global_css() -> None:
               font-size: 0.7rem;
               padding: 0.18rem 0.36rem;
             }
+
+            .sm-nav-logo {
+              width: 146px;
+              transform: translateY(-40%);
+            }
           }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
+
+@st.cache_data(show_spinner=False)
+def _logo_data_uri(path: str) -> str:
+    p = Path(path)
+    payload = base64.b64encode(p.read_bytes()).decode("utf-8")
+    return f"data:image/png;base64,{payload}"
 
 
 def top_nav(active: str) -> None:
@@ -303,12 +319,14 @@ def top_nav(active: str) -> None:
     if not logo_path.exists():
         logo_path = assets_dir / "logo-web.png"
     logo_col, nav_col = st.columns([0.14, 0.86], gap="small")
-    logo_width = 180 if not _is_mobile_client() else 140
 
     with logo_col:
         st.markdown('<div class="sm-logo-wrap">', unsafe_allow_html=True)
         if logo_path.exists():
-            st.image(str(logo_path), width=logo_width)
+            st.markdown(
+                f'<img class="sm-nav-logo" src="{_logo_data_uri(str(logo_path))}" alt="SportMetrics logo" />',
+                unsafe_allow_html=True,
+            )
         st.markdown("</div>", unsafe_allow_html=True)
 
     with nav_col:
