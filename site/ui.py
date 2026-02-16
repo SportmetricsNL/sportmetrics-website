@@ -205,6 +205,12 @@ def inject_global_css() -> None:
             padding-top: 0.16rem;
           }
 
+          @media (min-width: 901px) {
+            .sm-logo-wrap img {
+              transform: translateY(-50%);
+            }
+          }
+
           .sm-mobile-menu {
             margin-top: 0.2rem;
           }
