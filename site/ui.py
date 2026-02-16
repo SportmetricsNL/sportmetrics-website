@@ -200,9 +200,9 @@ def inject_global_css() -> None:
           .sm-logo-wrap {
             display: flex;
             justify-content: flex-start;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100%;
-            padding-top: 0;
+            padding-top: 0.16rem;
           }
 
           .sm-mobile-menu {
@@ -293,15 +293,16 @@ def inject_global_css() -> None:
 
 def top_nav(active: str) -> None:
     assets_dir = Path(__file__).resolve().parents[1] / "assets"
-    logo_path = assets_dir / "logo-web.png"
+    logo_path = assets_dir / "logo.png"
     if not logo_path.exists():
-        logo_path = assets_dir / "logo.png"
+        logo_path = assets_dir / "logo-web.png"
     logo_col, nav_col = st.columns([0.14, 0.86], gap="small")
+    logo_width = 180 if not _is_mobile_client() else 140
 
     with logo_col:
         st.markdown('<div class="sm-logo-wrap">', unsafe_allow_html=True)
         if logo_path.exists():
-            st.image(str(logo_path), width=180)
+            st.image(str(logo_path), width=logo_width)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with nav_col:
