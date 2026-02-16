@@ -103,46 +103,80 @@ except Exception as e:
 
 
 # --- 2. KENNIS LADEN (PDF & DOCX) ---
+def _read_document(filepath: Path) -> str:
+    text_chunks: list[str] = []
+    if filepath.suffix.lower() == ".pdf":
+        reader = pypdf.PdfReader(str(filepath))
+        for page in reader.pages:
+            text = page.extract_text()
+            if text:
+                text_chunks.append(text)
+    elif filepath.suffix.lower() == ".docx":
+        doc = docx.Document(str(filepath))
+        for para in doc.paragraphs:
+            if para.text:
+                text_chunks.append(para.text)
+    return "\n".join(text_chunks).strip()
+
+
+def _is_additional_source(filepath: Path) -> bool:
+    name = filepath.name.lower()
+    return (
+        "leerboeknotities" in name
+        and "transcript" in name
+        and "krachttraining" in name
+        and "duursporters" in name
+    )
+
+
 @st.cache_resource
-def load_all_knowledge() -> str:
-    """Leest relevante PDF- en DOCX-bronnen uit meerdere mappen."""
+def load_all_knowledge() -> tuple[str, str]:
+    """Leest primaire en aanvullende literatuur zonder dubbele bestandsnamen."""
     search_roots = [
-        Path("."),
         Path("content/ai"),
-        Path("pages/Mijnsportestingai"),
         Path("assets"),
+        Path("pages/Mijnsportestingai"),
     ]
-    seen: set[Path] = set()
-    files: list[Path] = []
+    excluded_filenames = {"websitevoorbeeld.pdf"}
+
+    chosen_by_name: dict[str, Path] = {}
     for root in search_roots:
         if not root.exists():
             continue
         for path in root.rglob("*"):
-            if path.suffix.lower() in {".pdf", ".docx"} and path.is_file():
-                resolved = path.resolve()
-                if resolved not in seen:
-                    seen.add(resolved)
-                    files.append(path)
+            if not path.is_file() or path.suffix.lower() not in {".pdf", ".docx"}:
+                continue
+            normalized_name = path.name.lower().strip()
+            if normalized_name in excluded_filenames:
+                continue
+            # Eerste match wint op basis van map-prioriteit in search_roots.
+            if normalized_name not in chosen_by_name:
+                chosen_by_name[normalized_name] = path
 
-    combined_text = ""
-    for filepath in files:
+    primary_blocks: list[str] = []
+    additional_blocks: list[str] = []
+
+    for normalized_name in sorted(chosen_by_name.keys()):
+        filepath = chosen_by_name[normalized_name]
         try:
-            if filepath.suffix.lower() == ".pdf":
-                reader = pypdf.PdfReader(str(filepath))
-                for page in reader.pages:
-                    text = page.extract_text()
-                    if text:
-                        combined_text += text + "\n"
-            elif filepath.suffix.lower() == ".docx":
-                doc = docx.Document(str(filepath))
-                for para in doc.paragraphs:
-                    combined_text += para.text + "\n"
+            text = _read_document(filepath)
         except Exception as e:
             print(f"Kon bestand {filepath} niet lezen: {e}")
-    return combined_text
+            continue
+
+        if not text:
+            continue
+
+        block = f"[BRON: {filepath.name}]\n{text}"
+        if _is_additional_source(filepath):
+            additional_blocks.append(block)
+        else:
+            primary_blocks.append(block)
+
+    return "\n\n".join(primary_blocks), "\n\n".join(additional_blocks)
 
 
-knowledge_base = load_all_knowledge()
+primary_knowledge_base, additional_knowledge_base = load_all_knowledge()
 
 # --- 3. DE AI INSTRUCTIES ---
 SYSTEM_PROMPT = f"""
@@ -150,11 +184,20 @@ ROL: Je bent een expert sportfysioloog van SportMetrics.
 
 BRONMATERIAAL:
 Je hebt toegang tot specifieke literatuur over trainingsleer (zie hieronder).
-Gebruik DEZE INFORMATIE als de absolute waarheid.
+Werk altijd op basis van deze literatuur.
 
-=== START LITERATUUR ===
-{knowledge_base}
-=== EINDE LITERATUUR ===
+VOLGORDE VAN BELANG:
+1. Primaire trainingsliteratuur is leidend.
+2. Aanvullende leerboeknotities op basis van transcripten zijn ondersteunend.
+3. Als primaire en aanvullende literatuur verschillen, volg je de primaire literatuur.
+
+=== START PRIMAIRE LITERATUUR ===
+{primary_knowledge_base}
+=== EINDE PRIMAIRE LITERATUUR ===
+
+=== START AANVULLENDE LITERATUUR (ONDERSTEUNEND) ===
+{additional_knowledge_base}
+=== EINDE AANVULLENDE LITERATUUR ===
 
 BELANGRIJKE REGELS:
 1. SportMetrics doet GEEN lactaatmetingen (prikken), alleen ademgasanalyse.
