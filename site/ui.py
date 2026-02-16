@@ -207,12 +207,10 @@ def inject_global_css() -> None:
           }
 
           .sm-nav-logo {
-            width: 180px;
+            width: 152px;
             height: auto;
             display: block;
-            transform: translateY(-46%);
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
+            transform: translateY(-30%);
           }
 
           .sm-mobile-menu {
