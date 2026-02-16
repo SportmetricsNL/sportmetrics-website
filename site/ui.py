@@ -217,6 +217,26 @@ def inject_global_css() -> None:
             margin-top: 0.2rem;
           }
 
+          div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+            background: #ffffff !important;
+            border: 1px solid var(--sm-border) !important;
+            color: var(--sm-ink) !important;
+          }
+
+          div[data-testid="stSelectbox"] [data-baseweb="select"] * {
+            color: var(--sm-ink) !important;
+          }
+
+          div[data-baseweb="popover"] [role="listbox"],
+          div[data-baseweb="popover"] [role="option"] {
+            background: #ffffff !important;
+            color: var(--sm-ink) !important;
+          }
+
+          div[data-baseweb="popover"] [role="option"]:hover {
+            background: #eef5f7 !important;
+          }
+
           .sm-inline-buttons {
             margin-top: 1rem;
           }
